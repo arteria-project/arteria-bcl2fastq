@@ -1,0 +1,56 @@
+FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator,SampleProject
+C6KV6ANXX,1,Sample_1,1,ATTACTCG-TATAGCCT,Library_1,,,,Dummy_Project
+C6KV6ANXX,1,Sample_2,1,ATTACTCG-ATAGAGGC,Library_2,,,,Dummy_Project
+C6KV6ANXX,1,Sample_3,1,ATTACTCG-CCTATCCT,Library_3,,,,Dummy_Project
+C6KV6ANXX,1,Sample_4,1,ATTACTCG-GGCTCTGA,Library_4,,,,Dummy_Project
+C6KV6ANXX,1,Sample_5,1,ATTACTCG-AGGCGAAG,Library_5,,,,Dummy_Project
+C6KV6ANXX,1,Sample_6,1,ATTACTCG-TAATCTTA,Library_6,,,,Dummy_Project
+C6KV6ANXX,1,Sample_7,1,ATTACTCG-CAGGACGT,Library_7,,,,Dummy_Project
+C6KV6ANXX,1,Sample_8,1,ATTACTCG-GTACTGAC,Library_8,,,,Dummy_Project
+C6KV6ANXX,1,Sample_9,1,TCCGGAGA-TATAGCCT,Library_9,,,,Dummy_Project
+C6KV6ANXX,1,Sample_10,1,TCCGGAGA-ATAGAGGC,Library_10,,,,Dummy_Project
+C6KV6ANXX,1,Sample_11,1,TCCGGAGA-CCTATCCT,Library_11,,,,Dummy_Project
+C6KV6ANXX,1,Sample_12,1,TCCGGAGA-GGCTCTGA,Library_12,,,,Dummy_Project
+C6KV6ANXX,1,Sample_13,1,TCCGGAGA-AGGCGAAG,Library_13,,,,Dummy_Project
+C6KV6ANXX,1,Sample_14,1,TCCGGAGA-CAGGACGT,Library_14,,,,Dummy_Project
+C6KV6ANXX,1,Sample_15,1,TCCGGAGA-GTACTGAC,Library_15,,,,Dummy_Project
+C6KV6ANXX,1,Sample_16,1,CGCTCATT-TATAGCCT,Library_16,,,,Dummy_Project
+C6KV6ANXX,1,Sample_17,1,CGCTCATT-ATAGAGGC,Library_17,,,,Dummy_Project
+C6KV6ANXX,1,Sample_18,1,CGCTCATT-CCTATCCT,Library_18,,,,Dummy_Project
+C6KV6ANXX,1,Sample_19,1,CGCTCATT-GGCTCTGA,Library_19,,,,Dummy_Project
+C6KV6ANXX,1,Sample_20,1,GAGATTCC-TATAGCCT,Library_20,,,,Dummy_Project
+C6KV6ANXX,1,Sample_21,1,GAGATTCC-ATAGAGGC,Library_21,,,,Dummy_Project
+C6KV6ANXX,1,Sample_22,1,GAGATTCC-CCTATCCT,Library_22,,,,Dummy_Project
+C6KV6ANXX,1,Sample_23,1,GAGATTCC-GGCTCTGA,Library_23,,,,Dummy_Project
+C6KV6ANXX,2,Sample_24,1,CGATGT,Library_24,,,,Dummy_Project
+C6KV6ANXX,2,Sample_25,1,TGACCA,Library_25,,,,Dummy_Project
+C6KV6ANXX,2,Sample_26,1,ACAGTG,Library_26,,,,Dummy_Project
+C6KV6ANXX,2,Sample_27,1,GCCAAT,Library_27,,,,Dummy_Project
+C6KV6ANXX,2,Sample_28,1,ATGTCA,Library_28,,,,Dummy_Project
+C6KV6ANXX,2,Sample_29,1,CCGTCC,Library_29,,,,Dummy_Project
+C6KV6ANXX,2,Sample_30,1,GTCCGC,Library_30,,,,Dummy_Project
+C6KV6ANXX,2,Sample_31,1,GTGAAA,Library_31,,,,Dummy_Project
+C6KV6ANXX,3,Sample_32,1,CGATGT,Library_32,,,,Dummy_Project
+C6KV6ANXX,3,Sample_33,1,TGACCA,Library_33,,,,Dummy_Project
+C6KV6ANXX,3,Sample_34,1,ACAGTG,Library_34,,,,Dummy_Project
+C6KV6ANXX,3,Sample_35,1,GCCAAT,Library_35,,,,Dummy_Project
+C6KV6ANXX,3,Sample_36,1,CAGATC,Library_36,,,,Dummy_Project
+C6KV6ANXX,3,Sample_37,1,CTTGTA,Library_37,,,,Dummy_Project
+C6KV6ANXX,3,Sample_38,1,AGTCAA,Library_38,,,,Dummy_Project
+C6KV6ANXX,3,Sample_39,1,AGTTCC,Library_39,,,,Dummy_Project
+C6KV6ANXX,4,Sample_40,1,CTCGATG,Library_40,,,,Dummy_Project
+C6KV6ANXX,4,Sample_41,1,TGCGTCC ,Library_41,,,,Dummy_Project
+C6KV6ANXX,4,Sample_42,1,ACTATCA ,Library_42,,,,Dummy_Project
+C6KV6ANXX,4,Sample_43,1,GGCGGAG ,Library_43,,,,Dummy_Project
+C6KV6ANXX,5,Sample_44,1,CTCGATG,Library_44,,,,Dummy_Project
+C6KV6ANXX,5,Sample_45,1,TGCGTCC ,Library_45,,,,Dummy_Project
+C6KV6ANXX,5,Sample_46,1,ACTATCA ,Library_46,,,,Dummy_Project
+C6KV6ANXX,5,Sample_47,1,GGCGGAG ,Library_47,,,,Dummy_Project
+C6KV6ANXX,6,Sample_48,1,CAGGAAG ,Library_48,,,,Dummy_Project
+C6KV6ANXX,6,Sample_49,1,TAATGCG ,Library_49,,,,Dummy_Project
+C6KV6ANXX,6,Sample_50,1,ACCAACG,Library_50,,,,Dummy_Project
+C6KV6ANXX,7,Sample_51,1,CAGGAAG ,Library_51,,,,Dummy_Project
+C6KV6ANXX,7,Sample_52,1,TAATGCG ,Library_52,,,,Dummy_Project
+C6KV6ANXX,7,Sample_53,1,ACCAACG,Library_53,,,,Dummy_Project
+C6KV6ANXX,8,Sample_54,1,CATGCTC ,Library_54,,,,Dummy_Project
+C6KV6ANXX,8,Sample_55,1,TCGCAGG ,Library_55,,,,Dummy_Project

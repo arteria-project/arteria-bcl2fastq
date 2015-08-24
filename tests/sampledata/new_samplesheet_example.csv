@@ -1,0 +1,29 @@
+[Header],,,,,,,,,,,
+IEMFileVersion,4,,,,,,,,,,
+Experiment Name,Hiseq-2500-dual-index,,,,,,,,,,
+Date,8/13/2015,,,,,,,,,,
+Workflow,Resequencing,,,,,,,,,,
+Application,Human Genome Resequencing,,,,,,,,,,
+Assay,TruSeq HT,,,,,,,,,,
+Description,,,,,,,,,,,
+Chemistry,Amplicon,,,,,,,,,,
+,,,,,,,,,,,
+[Reads],,,,,,,,,,,
+151,,,,,,,,,,,
+151,,,,,,,,,,,
+,,,,,,,,,,,
+[Settings],,,,,,,,,,,
+FlagPCRDuplicates,1,,,,,,,,,,
+Adapter,AGATCGGAAGAGCACACGTCTGAACTCCAGTCA,,,,,,,,,,
+AdapterRead2,AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT,,,,,,,,,,
+,,,,,,,,,,,
+[Data],,,,,,,,,,,
+Lane,Sample_ID,Sample_Name,Sample_Plate,Sample_Well,I7_Index_ID,index,I5_Index_ID,index2,Sample_Project,Description,GenomeFolder
+1,1,1,,,D701,ATTACTCG,D501,TATAGCCT,Test,Hiseq2500-dual-index,Homo_sapiens\UCSC\hg19\Sequence\WholeGenomeFasta
+2,2,2,,,D702,TCCGGA,D503,,Test,Hiseq2500-dual-index,Homo_sapiens\UCSC\hg19\Sequence\WholeGenomeFasta
+3,3,3,,,D703,CGCTCA,D503,,Test,Hiseq2500-dual-index,Homo_sapiens\UCSC\hg19\Sequence\WholeGenomeFasta
+4,4,4,,,D704,GAGATTC,D504,,Test,Hiseq2500-dual-index,Homo_sapiens\UCSC\hg19\Sequence\WholeGenomeFasta
+5,5,5,,,D705,ATTCAGA,D505,,Test,Hiseq2500-dual-index,Homo_sapiens\UCSC\hg19\Sequence\WholeGenomeFasta
+6,6,6,,,D706,GAATTCG,D506,,Test,Hiseq2500-dual-index,Homo_sapiens\UCSC\hg19\Sequence\WholeGenomeFasta
+7,7,7,,,D707,CTGAAGC,D507,,Test,Hiseq2500-dual-index,Homo_sapiens\UCSC\hg19\Sequence\WholeGenomeFasta
+8,8,8,,,D708,TAATGCG,D508,,Test,Hiseq2500-dual-index,Homo_sapiens\UCSC\hg19\Sequence\WholeGenomeFasta

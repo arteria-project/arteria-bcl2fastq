@@ -1,0 +1,9 @@
+jsonpickle
+tornado
+click
+git+https://github.com/johandahlberg/localq.git@with_shell_true # Get from pip in future - localq
+mock # only for tests
+pyyaml
+illuminate
+pandas
+

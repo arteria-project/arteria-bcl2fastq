@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cp ./bcl2fastq-wsd /etc/init.d/
+sudo update-rc.d bcl2fastq-wsd defaults

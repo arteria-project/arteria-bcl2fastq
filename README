@@ -1,0 +1,37 @@
+Arteria bcl2fastq
+=================
+
+NOTE: This software is still in a pre-release state. Anything can and will happen!
+With that said, improvement suggestions and PRs are very welcome if you want to try it out.
+
+A self contained (Tornado) REST service for running Illuminas bcl2fastq.
+
+Try running it:
+
+     python ./bcl2fastq/app.py --config config/bcl2fastq.config.yaml
+
+And then you can find a simple api documentation by going to:
+
+    http://localhost:8888/api/1.0
+
+Install:
+    # install dependencies
+    pip install -r requirements.txt
+    # install the bcl2fastq_ws package and create the script bcl2fastq-ws
+    python setup.py install
+
+    # TODO This is not working yet.
+    # install the daemon, after this you can manage the service through
+    # etc/init.d/bcl2fastq-ws
+    install-daemon
+
+Running integration tests in docker container (with a centos base):
+
+    # NB: The container currently builds of an internal image.
+    #     We will work to find some publically available data,
+    #     to base of, but this is it for now.
+    docker build -t bcl2fastq-ws .
+    docker run -v $PWD:/bcl2fastq-ws -p 8888:8888 -t -i bcl2fastq-ws:latest /bin/bash
+
+    # Once inside the docker container execute
+    cd /bcl2fastq-ws/ && pip install -r requirements.txt && python2.7 setup.py install && python2.7 bcl2fastq/app.py --config config/bcl2fastq.integration_tests.config.yaml

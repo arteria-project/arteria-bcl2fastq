@@ -1,0 +1,79 @@
+#!/bin/bash
+# Setup latest version of the bcl2fastq service:
+
+# This requires pip and virtualenv
+
+user=$1
+group=$2
+type=$3
+source=$4
+installpath=$5
+
+if [ "$user" == "" ]; then
+    user="root"
+fi
+
+if [ "$group" == "" ]; then
+    group="root"
+fi
+
+if [ "$type" == "" ]; then
+    type="dev"
+fi
+
+if [ "$source" == "" ]; then
+    source="/arteria/arteria-lib/bcl2fastq"
+fi
+
+if [ "$installpath" == "" ]; then
+    installpath="/opt/bcl2fastq"
+fi
+
+echo "Installing from $source to $installpath, type=$type"
+mkdir -pv $installpath/etc
+virtualenv $installpath/
+cp $source/config/bcl2fastq.config $installpath/etc/
+chown -R $user:$user $installpath
+
+# activate the virtualenv
+echo "Switching to the '$installpath' virtualenv"
+source $installpath/bin/activate
+
+if [ "$type" == "dev" ]; then
+    echo "Installing the bcl2fastq package in development mode"
+    pip install -e file://$source -r $source/requirements/dev
+else
+    # TODO: Support prod
+    echo "NOTE: Installing the bcl2fastq package in development mode" >&2
+    pip install -e file://$source -r $source/requirements/prod
+fi
+
+echo "Registering the bcl2fastq-wsd daemon"
+cd $source/scripts/
+# TODO: no cd
+./install-daemon
+
+echo "Starting bcl2fastq-wsd"
+if [ "$type" == "dev" ]; then
+    service bcl2fastq-wsd restart dev
+else
+    service bcl2fastq-wsd restart
+fi
+
+if [ "$type" == "dev" ]; then
+    echo "Add bcl2fastq-ws-test for easy integration testing"
+    testbin="/usr/bin/bcl2fastq-ws-test"
+    echo "source $installpath/bin/activate" > $testbin 
+    echo "nosetests $source/tests/integration" >> $testbin 
+    
+    chmod +x $testbin 
+
+    echo "Running integration tests"
+    $testbin
+else
+    echo "Not running tests"
+fi
+
+echo "Moving back to the default python environment"
+
+
