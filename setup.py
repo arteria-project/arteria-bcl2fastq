@@ -5,6 +5,12 @@ import os
 def read_file(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+try:
+    with open("requirements.txt", "r") as f:
+        install_requires = [x.strip() for x in f.readlines()]
+except IOError:
+    install_requires = []
+
 setup(
     name='bcl2fastq',
     version=__version__,
@@ -16,5 +22,6 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': ['bcl2fastq-ws = bcl2fastq.app:start']
-    }
+    },
+    #install_requires=install_requires
 )
