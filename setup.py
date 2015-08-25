@@ -23,5 +23,5 @@ setup(
     entry_points={
         'console_scripts': ['bcl2fastq-ws = bcl2fastq.app:start']
     },
-    install_requires=install_requires
+    #install_requires=install_requires
 )
