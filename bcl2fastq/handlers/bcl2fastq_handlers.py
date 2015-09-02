@@ -1,17 +1,12 @@
 
-from bcl2fastq.handlers.base_handler import BaseHandler
-from bcl2fastq.lib.jobrunner import LocalQAdapter
-from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunnerFactory, Bcl2FastqConfig
-from bcl2fastq.lib.config import Config
-
 import json
 import logging
 
-from bcl2fastq.handlers.base_handler import BaseHandler
 from bcl2fastq.lib.jobrunner import LocalQAdapter
 from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunnerFactory, Bcl2FastqConfig
 from bcl2fastq.lib.config import Config
 from arteria.web.state import State
+from arteria.web.handlers import BaseRestHandler
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +48,7 @@ class Bcl2FastqServiceMixin:
             return Bcl2FastqServiceMixin._bcl2fastq_cmd_generation_service
 
 
-class VersionsHandler(BaseHandler):
+class VersionsHandler(BaseRestHandler):
     """
     Get the available bcl2fastq versions that the
     service knows about.
@@ -63,7 +58,7 @@ class VersionsHandler(BaseHandler):
         available_versions = config["bcl2fastq"]["versions"].keys()
         self.write_object(available_versions)
 
-class StartHandler(BaseHandler, Bcl2FastqServiceMixin):
+class StartHandler(BaseRestHandler, Bcl2FastqServiceMixin):
     """
     Start bcl2fastq
     """
@@ -173,7 +168,7 @@ class StartHandler(BaseHandler, Bcl2FastqServiceMixin):
             self.send_error(status_code=500, reason=e.message)
 
 
-class StatusHandler(BaseHandler, Bcl2FastqServiceMixin):
+class StatusHandler(BaseRestHandler, Bcl2FastqServiceMixin):
     """
     Get the status of one or all jobs.
     """
@@ -197,7 +192,7 @@ class StatusHandler(BaseHandler, Bcl2FastqServiceMixin):
         self.write_json(status)
 
 
-class StopHandler(BaseHandler, Bcl2FastqServiceMixin):
+class StopHandler(BaseRestHandler, Bcl2FastqServiceMixin):
     """
     Stop one or all jobs.
     """
