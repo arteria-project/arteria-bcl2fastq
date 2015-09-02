@@ -151,8 +151,8 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         try:
             runfolder_config = self.create_config_from_request(runfolder, self.request.body)
 
-            cmd = self.bcl2fastq_cmd_generation_service(self.config).\
-                create_bcl2fastq_runner(runfolder_config).\
+            cmd = self.bcl2fastq_cmd_generation_service(self.config). \
+                create_bcl2fastq_runner(runfolder_config). \
                 construct_command()
 
             log_base_path = self.config["bcl2fastq_logs_path"]
@@ -165,6 +165,12 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
                 stdout=log_file,
                 stderr=log_file)
 
+            log.info(
+                "Cmd: {} started in {} with {} cores. Writing logs to: {}".format(cmd,
+                                                                                  runfolder_config.runfolder_input,
+                                                                                  runfolder_config.nbr_of_cores,
+                                                                                  log_file))
+
             status_end_point = "{0}://{1}{2}".format(
                 self.request.protocol,
                 self.request.host,
@@ -175,6 +181,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
             self.set_status(202, reason="started processing")
             self.write_json(response_data)
         except RuntimeError as e:
+            log.warning("Failed starting {}. Message: ".format(runfolder, e.message))
             self.send_error(status_code=500, reason=e.message)
 
 
@@ -214,14 +221,18 @@ class StopHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         """
         try:
             if job_id == "all":
+                log.info("Attempting to stop all jobs.")
                 self.runner_service().stop_all()
+                log.info("Stopped all jobs!")
                 self.set_status(200)
             elif job_id:
+                log.info("Attempting to stop job: {}".format(job_id))
                 self.runner_service().stop(job_id)
                 self.set_status(200)
             else:
                 ValueError("Unknown job to stop")
         except ValueError as e:
+            log.warning("Failed stopping job: {}. Message: ".format(job_id, e.message))
             self.send_error(500, reason=e.message)
 
 
