@@ -6,7 +6,8 @@ from test_utils import TestUtils
 
 
 from bcl2fastq.handlers.bcl2fastq_handlers import *
-from bcl2fastq.app import create_app
+from bcl2fastq.app import ROUTES
+from tornado.web import Application
 
 
 class TestBcl2FastqHandlers(AsyncHTTPTestCase):
@@ -23,7 +24,7 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
                             }
 
     def get_app(self):
-        return create_app(debug=False, auto_reload=False)
+        return Application(ROUTES)
 
     def test_versions(self):
         with mock.patch.object(Config, 'load_config', return_value=TestUtils.DUMMY_CONFIG):
