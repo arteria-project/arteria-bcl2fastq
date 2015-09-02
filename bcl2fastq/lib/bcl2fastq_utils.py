@@ -4,7 +4,6 @@ from itertools import groupby
 
 from illuminate.metadata import InteropMetadata
 
-from bcl2fastq.lib.config import Config
 from bcl2fastq.lib.illumina import Samplesheet
 
 class Bcl2FastqConfig:
@@ -14,6 +13,7 @@ class Bcl2FastqConfig:
     values which have to be set.
     """
     def __init__(self,
+                 general_config,
                  bcl2fastq_version,
                  runfolder_input,
                  output,
@@ -31,12 +31,12 @@ class Bcl2FastqConfig:
             self.bcl2fastq_version = bcl2fastq_version
         else:
             self.bcl2fastq_version = Bcl2FastqConfig.\
-                get_bcl2fastq_version_from_run_parameters(runfolder_input)
+                get_bcl2fastq_version_from_run_parameters(runfolder_input, general_config)
 
         if output:
             self.output = output
         else:
-            output_base = Config.load_config()["default_output_path"]
+            output_base = general_config["default_output_path"]
             runfolder_base_name = os.path.basename(runfolder_input)
             self.output = "{0}/{1}".format(output_base, runfolder_base_name)
 
@@ -56,21 +56,20 @@ class Bcl2FastqConfig:
             self.nbr_of_cores = multiprocessing.cpu_count()
 
     @staticmethod
-    def get_bcl2fastq_version_from_run_parameters(runfolder, config=None):
+    def get_bcl2fastq_version_from_run_parameters(runfolder, config):
         """
         Guess which bcl2fastq version to use based on the machine type
         specified in the runfolder meta data, and the corresponding
         mappings in the config file.
         :param runfolder: to get bcl2fastq version to use for
-        :param config: to use matching machine type to bcl2fastq versions (will be
-        loaded from default config if not set).
+        :param config: to use matching machine type to bcl2fastq versions
         :return the version of bcl2fastq to use.
         """
 
         meta_data = InteropMetadata(runfolder)
         model = meta_data.model
 
-        current_config = config or Config.load_config()
+        current_config = config
         version = current_config["machine_type"][model]["bcl2fastq_version"]
 
         return version
@@ -159,8 +158,8 @@ class BCL2FastqRunnerFactory:
     and the it's known binaries.
     """
 
-    def __init__(self, config=None):
-        config = config or Config.load_config()
+    def __init__(self, config):
+        self.config = config
         self.bcl2fastq_mappings = config["bcl2fastq"]["versions"]
 
     def _get_class_creator(self, version):

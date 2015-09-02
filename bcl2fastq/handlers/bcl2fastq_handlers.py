@@ -4,7 +4,6 @@ import logging
 
 from bcl2fastq.lib.jobrunner import LocalQAdapter
 from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunnerFactory, Bcl2FastqConfig
-from bcl2fastq.lib.config import Config
 from arteria.web.state import State
 from arteria.web.handlers import BaseRestHandler
 
@@ -37,28 +36,35 @@ class Bcl2FastqServiceMixin:
     _bcl2fastq_cmd_generation_service = None
 
     @staticmethod
-    def bcl2fastq_cmd_generation_service():
+    def bcl2fastq_cmd_generation_service(config):
         """
         Create a command generation service unless one already exists.
         """
         if Bcl2FastqServiceMixin._bcl2fastq_cmd_generation_service:
             return Bcl2FastqServiceMixin._bcl2fastq_cmd_generation_service
         else:
-            Bcl2FastqServiceMixin._bcl2fastq_cmd_generation_service = BCL2FastqRunnerFactory()
+            Bcl2FastqServiceMixin._bcl2fastq_cmd_generation_service = BCL2FastqRunnerFactory(config)
             return Bcl2FastqServiceMixin._bcl2fastq_cmd_generation_service
 
+class BaseBcl2FastqHandler(BaseRestHandler):
 
-class VersionsHandler(BaseRestHandler):
+    def initialize(self, config):
+        self.config = config
+
+
+class VersionsHandler(BaseBcl2FastqHandler):
     """
     Get the available bcl2fastq versions that the
     service knows about.
     """
     def get(self):
-        config = Config.load_config()
-        available_versions = config["bcl2fastq"]["versions"].keys()
+        """
+        Returns all available bcl2fastq versions (as defined by config).
+        """
+        available_versions = self.config["bcl2fastq"]["versions"].keys()
         self.write_object(available_versions)
 
-class StartHandler(BaseRestHandler, Bcl2FastqServiceMixin):
+class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
     """
     Start bcl2fastq
     """
@@ -83,7 +89,7 @@ class StartHandler(BaseRestHandler, Bcl2FastqServiceMixin):
         use_base_mask = ""
         additional_args = ""
 
-        runfolder_base_path = Config.load_config()["runfolder_path"]
+        runfolder_base_path = self.config["runfolder_path"]
         runfolder_input = "{0}/{1}".format(runfolder_base_path, runfolder)
 
         import os.path as p
@@ -109,6 +115,7 @@ class StartHandler(BaseRestHandler, Bcl2FastqServiceMixin):
             additional_args = request_data["additional_args"]
 
         config = Bcl2FastqConfig(
+            self.config,
             bcl2fastq_version,
             runfolder_input,
             output,
@@ -140,12 +147,11 @@ class StartHandler(BaseRestHandler, Bcl2FastqServiceMixin):
             #TODO Make sure this works even if body is not set! /JD 20150820
             runfolder_config = self.create_config_from_request(runfolder, json.loads(self.request.body))
 
-            cmd = self.bcl2fastq_cmd_generation_service().\
+            cmd = self.bcl2fastq_cmd_generation_service(self.config).\
                 create_bcl2fastq_runner(runfolder_config).\
                 construct_command()
 
-            general_config = Config.load_config()
-            log_base_path = general_config["bcl2fastq_logs_path"]
+            log_base_path = self.config["bcl2fastq_logs_path"]
             log_file = "{0}/{1}.log".format(log_base_path, runfolder)
 
             job_id = self.runner_service().start(
@@ -168,7 +174,7 @@ class StartHandler(BaseRestHandler, Bcl2FastqServiceMixin):
             self.send_error(status_code=500, reason=e.message)
 
 
-class StatusHandler(BaseRestHandler, Bcl2FastqServiceMixin):
+class StatusHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
     """
     Get the status of one or all jobs.
     """
@@ -192,7 +198,7 @@ class StatusHandler(BaseRestHandler, Bcl2FastqServiceMixin):
         self.write_json(status)
 
 
-class StopHandler(BaseRestHandler, Bcl2FastqServiceMixin):
+class StopHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
     """
     Stop one or all jobs.
     """

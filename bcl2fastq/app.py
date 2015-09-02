@@ -6,12 +6,15 @@ import logging
 
 # Setup the routing. Help will be automatically available at /api, and will be based on
 # the doc strings of the get/post/put/delete methods
-ROUTES = [
-    url(r"/api/1.0/versions", VersionsHandler, name="versions"),
-    url(r"/api/1.0/start/([\w_-]+)", StartHandler, name="start"),
-    url(r"/api/1.0/status/(\d*)", StatusHandler, name="status"),
-    url(r"/api/1.0/stop/([\d|all]*)", StopHandler, name="stop")
-]
+
+def routes(**kwargs):
+    routes = [
+        url(r"/api/1.0/versions", VersionsHandler, name="versions", kwargs=kwargs),
+        url(r"/api/1.0/start/([\w_-]+)", StartHandler, name="start", kwargs=kwargs),
+        url(r"/api/1.0/status/(\d*)", StatusHandler, name="status", kwargs=kwargs),
+        url(r"/api/1.0/stop/([\d|all]*)", StopHandler, name="stop", kwargs=kwargs)
+    ]
+    return routes
 
 def start():
 
@@ -19,4 +22,4 @@ def start():
 
     app_svc = AppService.create(__package__)
 
-    app_svc.start(ROUTES)
+    app_svc.start(routes(config=app_svc.config_svc))

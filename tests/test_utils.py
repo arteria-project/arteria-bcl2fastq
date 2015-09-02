@@ -19,3 +19,7 @@ class TestUtils:
                           "HiSeq 2000": {"bcl2fastq_version": "1.8.4"},
                           "NextSeq 500": {"bcl2fastq_version": "1.8.4"}},
                      "bcl2fastq_logs_path": "/tmp/"}
+
+class DummyConfig:
+    def __getitem__(self, key):
+        return TestUtils.DUMMY_CONFIG[key]
