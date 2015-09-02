@@ -18,8 +18,5 @@ def routes(**kwargs):
 
 def start():
 
-    log = logging.getLogger(__name__)
-
     app_svc = AppService.create(__package__)
-
     app_svc.start(routes(config=app_svc.config_svc))

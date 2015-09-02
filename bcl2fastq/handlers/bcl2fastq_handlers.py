@@ -1,6 +1,7 @@
 
 import json
 import logging
+import os
 
 from bcl2fastq.lib.jobrunner import LocalQAdapter
 from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunnerFactory, Bcl2FastqConfig
@@ -69,16 +70,21 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
     Start bcl2fastq
     """
 
-    def create_config_from_request(self, runfolder, request_data):
+    def create_config_from_request(self, runfolder, request_body):
         """
         For the specified runfolder, will look it up from the place setup in the
         configuration, and then parse additinoal data from the request_data object.
         This can be used to override any default setting in the resulting Bcl2FastqConfig
         instance.
         :param runfolder: name of the runfolder we want to create a config for
-        :param request_data: dict containing additional configurations
+        :param request_body: the body of the request. Can be empty, in which case if will not be loaded.
         :return: an instances of Bcl2FastqConfig
         """
+
+        if request_body:
+            request_data = json.loads(request_body)
+        else:
+            request_data = {}
 
         # TODO Make sure to escape them for sec. reasons.
         bcl2fastq_version = ""
@@ -92,8 +98,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         runfolder_base_path = self.config["runfolder_path"]
         runfolder_input = "{0}/{1}".format(runfolder_base_path, runfolder)
 
-        import os.path as p
-        if not p.isdir(runfolder_input):
+        if not os.path.isdir(runfolder_input):
             raise RuntimeError("No such file: {0}".format(runfolder_input))
 
         if "bcl2fastq_version" in request_data:
@@ -144,11 +149,10 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         """
 
         try:
-            #TODO Make sure this works even if body is not set! /JD 20150820
-            runfolder_config = self.create_config_from_request(runfolder, json.loads(self.request.body))
+            runfolder_config = self.create_config_from_request(runfolder, self.request.body)
 
-            cmd = self.bcl2fastq_cmd_generation_service(self.config).\
-                create_bcl2fastq_runner(runfolder_config).\
+            cmd = self.bcl2fastq_cmd_generation_service(self.config). \
+                create_bcl2fastq_runner(runfolder_config). \
                 construct_command()
 
             log_base_path = self.config["bcl2fastq_logs_path"]
@@ -161,6 +165,12 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
                 stdout=log_file,
                 stderr=log_file)
 
+            log.info(
+                "Cmd: {} started in {} with {} cores. Writing logs to: {}".format(cmd,
+                                                                                  runfolder_config.runfolder_input,
+                                                                                  runfolder_config.nbr_of_cores,
+                                                                                  log_file))
+
             status_end_point = "{0}://{1}{2}".format(
                 self.request.protocol,
                 self.request.host,
@@ -171,6 +181,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
             self.set_status(202, reason="started processing")
             self.write_json(response_data)
         except RuntimeError as e:
+            log.warning("Failed starting {}. Message: ".format(runfolder, e.message))
             self.send_error(status_code=500, reason=e.message)
 
 
@@ -210,14 +221,18 @@ class StopHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         """
         try:
             if job_id == "all":
+                log.info("Attempting to stop all jobs.")
                 self.runner_service().stop_all()
+                log.info("Stopped all jobs!")
                 self.set_status(200)
             elif job_id:
+                log.info("Attempting to stop job: {}".format(job_id))
                 self.runner_service().stop(job_id)
                 self.set_status(200)
             else:
                 ValueError("Unknown job to stop")
         except ValueError as e:
+            log.warning("Failed stopping job: {}. Message: ".format(job_id, e.message))
             self.send_error(500, reason=e.message)
 
 
