@@ -1,11 +1,14 @@
 import subprocess
 import os.path
 from itertools import groupby
+import logging
 
 from illuminate.metadata import InteropMetadata
 
-from bcl2fastq.lib.config import Config
 from bcl2fastq.lib.illumina import Samplesheet
+
+log = logging.getLogger(__name__)
+
 
 class Bcl2FastqConfig:
     """
@@ -14,6 +17,7 @@ class Bcl2FastqConfig:
     values which have to be set.
     """
     def __init__(self,
+                 general_config,
                  bcl2fastq_version,
                  runfolder_input,
                  output,
@@ -31,12 +35,12 @@ class Bcl2FastqConfig:
             self.bcl2fastq_version = bcl2fastq_version
         else:
             self.bcl2fastq_version = Bcl2FastqConfig.\
-                get_bcl2fastq_version_from_run_parameters(runfolder_input)
+                get_bcl2fastq_version_from_run_parameters(runfolder_input, general_config)
 
         if output:
             self.output = output
         else:
-            output_base = Config.load_config()["default_output_path"]
+            output_base = general_config["default_output_path"]
             runfolder_base_name = os.path.basename(runfolder_input)
             self.output = "{0}/{1}".format(output_base, runfolder_base_name)
 
@@ -56,21 +60,20 @@ class Bcl2FastqConfig:
             self.nbr_of_cores = multiprocessing.cpu_count()
 
     @staticmethod
-    def get_bcl2fastq_version_from_run_parameters(runfolder, config=None):
+    def get_bcl2fastq_version_from_run_parameters(runfolder, config):
         """
         Guess which bcl2fastq version to use based on the machine type
         specified in the runfolder meta data, and the corresponding
         mappings in the config file.
         :param runfolder: to get bcl2fastq version to use for
-        :param config: to use matching machine type to bcl2fastq versions (will be
-        loaded from default config if not set).
+        :param config: to use matching machine type to bcl2fastq versions
         :return the version of bcl2fastq to use.
         """
 
         meta_data = InteropMetadata(runfolder)
         model = meta_data.model
 
-        current_config = config or Config.load_config()
+        current_config = config
         version = current_config["machine_type"][model]["bcl2fastq_version"]
 
         return version
@@ -119,8 +122,6 @@ class Bcl2FastqConfig:
         def construct_double_index_basemask(index1, index2):
             index1_length = len(index1)
             index2_length = len(index2)
-            print index1_length
-            print index2_length
             return "y*,{0}{1}{2},{3}{4}{5},y*".format(
                 "i", index1_length, pad_with_ignore(index1_length, index_lengths[2]),
                 "i", index2_length, pad_with_ignore(index2_length, index_lengths[3]))
@@ -159,8 +160,8 @@ class BCL2FastqRunnerFactory:
     and the it's known binaries.
     """
 
-    def __init__(self, config=None):
-        config = config or Config.load_config()
+    def __init__(self, config):
+        self.config = config
         self.bcl2fastq_mappings = config["bcl2fastq"]["versions"]
 
     def _get_class_creator(self, version):
@@ -223,19 +224,17 @@ class BCL2FastqRunner(object):
         Will run the command provided by `_construct_command`
         :return: True is successfully run, else False.
         """
-        #TODO Use logger!
+
         self.command = self.construct_command()
-        print("Running bcl2fastq with command: " + self.command)
+        log.debug("Running bcl2fastq with command: " + self.command)
 
         try:
             output = subprocess.check_call(self.command, shell=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as exc:
-            #TODO Figure out better error processing (and logging here).
-            print("Failure in running bcl2fastq!")
-            print(exc)
+            log.warning("Failure in running bcl2fastq: {}".format(exc.message))
             return False
         else:
-            print("Successfully finished running bcl2fastq!")
+            log.debug("Successfully finished running bcl2fastq!")
             return True
 
 
@@ -276,7 +275,7 @@ class BCL2Fastq2xRunner(BCL2FastqRunner):
             commandline_collection.append(self.config.additional_args)
 
         command = " ".join(commandline_collection)
-        print("Generated command: " + command)
+        log.debug("Generated command: " + command)
         return command
 
 class BCL2Fastq1xRunner(BCL2FastqRunner):
@@ -332,5 +331,5 @@ class BCL2Fastq1xRunner(BCL2FastqRunner):
         commandline_collection.append(" && make -j{0}".format(self.config.nbr_of_cores))
 
         command = " ".join(commandline_collection)
-        print("Generated command: " + command)
+        log.debug("Generated command: " + command)
         return command
