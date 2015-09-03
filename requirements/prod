@@ -1,7 +1,7 @@
-jsonpickle
-tornado
+jsonpickle==0.9.2
+tornado==4.2.1
 git+https://github.com/johandahlberg/localq.git@with_shell_true # Get from pip in future - localq
 git+https://github.com/arteria-project/arteria-core.git
-illuminate
-pandas
+illuminate==0.6.2
+pandas==0.14.1
 
