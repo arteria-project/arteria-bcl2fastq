@@ -14,6 +14,7 @@ class SampleRow:
     samplesheet. Right only picking up the data field is
     supported.
     """
+
     def __init__(self, sample_id, sample_name, index1, sample_project, lane=None, sample_plate=None,
                  sample_well=None, index2=None, description=None):
         """

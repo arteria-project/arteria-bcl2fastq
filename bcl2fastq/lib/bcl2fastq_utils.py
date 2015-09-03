@@ -26,6 +26,19 @@ class Bcl2FastqConfig:
                  use_base_mask=None,
                  additional_args=None,
                  nbr_of_cores=None):
+        """
+        Instantiate Bcl2FastqConfig
+        :param general_config: a dict containing general configuration.
+                               Typlically loaded from arteria-core ConfigurationService
+        :param bcl2fastq_version: version of bcl2fastq to run
+        :param runfolder_input: the path to the runfolder to run bcl2fastq on
+        :param output: where the output of bcl2fastq should be placed
+        :param barcode_mismatches: how many mismatches to allow in tag.
+        :param tiles: tiles to include when running bcl2fastq
+        :param use_base_mask: base mask to use
+        :param additional_args: this can be used to pass any other arguments to bcl2fastq
+        :param nbr_of_cores: number of cores to run bcl2fastq with
+        """
 
         self.runfolder_input = runfolder_input
         self.samplesheet_file = runfolder_input + "/SampleSheet.csv"
@@ -34,7 +47,7 @@ class Bcl2FastqConfig:
         if bcl2fastq_version:
             self.bcl2fastq_version = bcl2fastq_version
         else:
-            self.bcl2fastq_version = Bcl2FastqConfig.\
+            self.bcl2fastq_version = Bcl2FastqConfig. \
                 get_bcl2fastq_version_from_run_parameters(runfolder_input, general_config)
 
         if output:
@@ -108,8 +121,6 @@ class Bcl2FastqConfig:
         :return a dict of the lane and base mask to use, e.g.:
                  { 1:"y*,iiiiiiiin*,iiiiiiiin*,y*" , 2:"y*,iiiiii,n*,y*  [etc] }
         """
-        def is_double_index(idxs):
-            return idxs[2]
 
         def pad_with_ignore(length_of_index_in_samplesheet, length_of_index_read):
             difference = length_of_index_read - length_of_index_in_samplesheet
@@ -161,6 +172,10 @@ class BCL2FastqRunnerFactory:
     """
 
     def __init__(self, config):
+        """
+        Instantiate a new BCL2FastqRunnerFactory
+        :param config: to use
+        """
         self.config = config
         self.bcl2fastq_mappings = config["bcl2fastq"]["versions"]
 
@@ -266,7 +281,7 @@ class BCL2Fastq2xRunner(BCL2FastqRunner):
         else:
             length_of_indexes = Bcl2FastqConfig.get_length_of_indexes(self.config.runfolder_input)
             samplesheet = Samplesheet(self.config.samplesheet_file)
-            lanes_and_base_mask = Bcl2FastqConfig.\
+            lanes_and_base_mask = Bcl2FastqConfig. \
                 get_bases_mask_per_lane_from_samplesheet(samplesheet, length_of_indexes)
             for lane, base_mask in lanes_and_base_mask.iteritems():
                 commandline_collection.append("--use-bases-mask {0}:{1}".format(lane, base_mask))

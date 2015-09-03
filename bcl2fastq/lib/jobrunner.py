@@ -58,6 +58,11 @@ class LocalQAdapter(JobRunnerAdapter):
 
     @staticmethod
     def localq2arteria_status(status):
+        """
+        Convert a localq status to an arteria state
+        :param status: to convert
+        :return: the arteria state
+        """
 
         if status == Status.COMPLETED:
             return arteria_state.DONE
