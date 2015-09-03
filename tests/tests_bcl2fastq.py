@@ -2,7 +2,9 @@ import unittest
 
 from bcl2fastq.lib.bcl2fastq_utils import *
 from bcl2fastq.lib.illumina import Samplesheet
-from test_utils import TestUtils
+from test_utils import TestUtils, DummyConfig
+
+DUMMY_CONFIG = DummyConfig()
 
 class TestBcl2FastqConfig(unittest.TestCase):
 
@@ -31,7 +33,7 @@ class TestBcl2FastqConfig(unittest.TestCase):
                                8: "y*,i7n*,n*,y*",
                                }
         samplesheet = Samplesheet(TestBcl2FastqConfig.samplesheet_file)
-        actual_bases_mask = Bcl2FastqConfig.\
+        actual_bases_mask = Bcl2FastqConfig. \
             get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths)
         self.assertEqual(expected_bases_mask, actual_bases_mask)
 
@@ -41,34 +43,40 @@ class TestBcl2FastqConfig(unittest.TestCase):
         samplesheet = Samplesheet(TestBcl2FastqConfig.samplesheet_file)
 
         with self.assertRaises(AssertionError):
-            Bcl2FastqConfig.\
+            Bcl2FastqConfig. \
                 get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths)
 
 
 class TestBCL2FastqRunnerFactory(unittest.TestCase):
 
     def test_create_bcl2fastq1x_runner(self):
-        config = Bcl2FastqConfig(bcl2fastq_version = "1.8.4",
-                                 runfolder_input = "test/runfolder",
-                                 output = "test/output")
+        config = Bcl2FastqConfig(
+            general_config = DUMMY_CONFIG,
+            bcl2fastq_version = "1.8.4",
+            runfolder_input = "test/runfolder",
+            output = "test/output")
 
         factory = BCL2FastqRunnerFactory(TestUtils.DUMMY_CONFIG)
         runner = factory.create_bcl2fastq_runner(config)
         self.assertIsInstance(runner, BCL2Fastq1xRunner)
 
     def test_create_bcl2fastq2x_runner(self):
-        config = Bcl2FastqConfig(bcl2fastq_version = "2.15.2",
-                                 runfolder_input = "test/runfolder",
-                                 output = "test/output")
+        config = Bcl2FastqConfig(
+            general_config = DUMMY_CONFIG,
+            bcl2fastq_version = "2.15.2",
+            runfolder_input = "test/runfolder",
+            output = "test/output")
 
         factory = BCL2FastqRunnerFactory(TestUtils.DUMMY_CONFIG)
         runner = factory.create_bcl2fastq_runner(config)
-        self.assertIsInstance(runner, BCL2Fastq2xRunner, msg= "runner is: " + str(runner))
+        self.assertIsInstance(runner, BCL2Fastq2xRunner, msg="runner is: " + str(runner))
 
     def test_create_invalid_version_runner(self):
-        config = Bcl2FastqConfig(bcl2fastq_version = "1.7",
-                                 runfolder_input = "test/runfolder",
-                                 output = "test/output")
+        config = Bcl2FastqConfig(
+            general_config = DUMMY_CONFIG,
+            bcl2fastq_version = "1.7",
+            runfolder_input = "test/runfolder",
+            output = "test/output")
 
         factory = BCL2FastqRunnerFactory(TestUtils.DUMMY_CONFIG)
         with self.assertRaises(LookupError):
@@ -79,6 +87,7 @@ class TestBCL2Fastq2xRunner(unittest.TestCase):
     def test_construct_command(self):
 
         config = Bcl2FastqConfig(
+            general_config = DUMMY_CONFIG,
             bcl2fastq_version = "2.15.2",
             runfolder_input = "test/runfolder",
             output = "test/output",
@@ -123,6 +132,7 @@ class TestBCL2Fastq1xRunner(unittest.TestCase):
 
     def test_construct_command(self):
         config = Bcl2FastqConfig(
+            general_config = DUMMY_CONFIG,
             bcl2fastq_version = "1.8.4",
             runfolder_input = "test/runfolder",
             output = "test/output",

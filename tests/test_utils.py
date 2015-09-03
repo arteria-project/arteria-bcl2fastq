@@ -1,4 +1,6 @@
 
+from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunner
+
 class TestUtils:
 
     DUMMY_CONFIG = { "runfolder_path": "/data/biotank3/runfolders",
@@ -19,3 +21,14 @@ class TestUtils:
                           "HiSeq 2000": {"bcl2fastq_version": "1.8.4"},
                           "NextSeq 500": {"bcl2fastq_version": "1.8.4"}},
                      "bcl2fastq_logs_path": "/tmp/"}
+
+class DummyConfig:
+    def __getitem__(self, key):
+        return TestUtils.DUMMY_CONFIG[key]
+
+class FakeRunner(BCL2FastqRunner):
+    def __init__(self):
+        pass
+
+    def construct_command(self):
+        return "fake_bcl_command"

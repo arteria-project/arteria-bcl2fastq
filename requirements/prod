@@ -1,0 +1,7 @@
+jsonpickle
+tornado
+git+https://github.com/johandahlberg/localq.git@with_shell_true # Get from pip in future - localq
+git+https://github.com/arteria-project/arteria-core.git
+illuminate
+pandas
+

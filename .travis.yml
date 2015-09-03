@@ -3,8 +3,13 @@ language: python
 python:
     - "2.7"
 
+before_install:
+    - sudo pip install virtualenv
+    - virtualenv $TRAVIS_BUILD_DIR/arteria-bcl2fastq/
+
 install:
-    - pip install -e . -r ./requirements.txt  
+    - source $TRAVIS_BUILD_DIR/arteria-bcl2fastq/bin/activate
+    - pip install -e . -r ./requirements/dev
 
 script:
     - nosetests tests/
