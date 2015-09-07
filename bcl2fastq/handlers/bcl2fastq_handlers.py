@@ -48,8 +48,15 @@ class Bcl2FastqServiceMixin:
             return Bcl2FastqServiceMixin._bcl2fastq_cmd_generation_service
 
 class BaseBcl2FastqHandler(BaseRestHandler):
+    """
+    Base handler for bcl2fastq.
+    """
 
     def initialize(self, config):
+        """
+        Ensures that any parameters feed to this are available
+        to subclasses.
+        """
         self.config = config
 
 
@@ -58,6 +65,7 @@ class VersionsHandler(BaseBcl2FastqHandler):
     Get the available bcl2fastq versions that the
     service knows about.
     """
+
     def get(self):
         """
         Returns all available bcl2fastq versions (as defined by config).
@@ -73,7 +81,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
     def create_config_from_request(self, runfolder, request_body):
         """
         For the specified runfolder, will look it up from the place setup in the
-        configuration, and then parse additinoal data from the request_data object.
+        configuration, and then parse additional data from the request_data object.
         This can be used to override any default setting in the resulting Bcl2FastqConfig
         instance.
         :param runfolder: name of the runfolder we want to create a config for
