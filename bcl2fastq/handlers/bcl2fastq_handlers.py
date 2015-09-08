@@ -71,7 +71,7 @@ class VersionsHandler(BaseBcl2FastqHandler):
         """
         Returns all available bcl2fastq versions (as defined by config).
         """
-        available_versions = self.config["bcl2fastq"]["versions"].keys()
+        available_versions = self.config["bcl2fastq"]["versions"]
         self.write_object(available_versions)
 
 class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
