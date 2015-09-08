@@ -227,6 +227,15 @@ class BCL2FastqRunner(object):
         self.binary = binary
         self.command = None
 
+    def version(self):
+        """
+        Get the version of bcl2fastq run. Preferably defer the
+        decision of which version it was to the binary (instead of
+        trusting that the configured versions are correct).
+        :return: the bcl2fastq version used.
+        """
+        raise NotImplementedError("Subclasses should implement this!")
+
     def construct_command(self):
         """
         Implement this in subclass
@@ -260,6 +269,14 @@ class BCL2Fastq2xRunner(BCL2FastqRunner):
 
     def __init__(self, config, binary):
         BCL2FastqRunner.__init__(self, config, binary)
+
+    def version(self):
+        cmd = [self.binary,
+               "--version",
+               "--min-log-level=NONE",
+               "2>&1 | grep 'bcl2fastq'| head -1"]
+        output = subprocess.check_call(cmd, shell=True, stderr=subprocess.STDOUT)
+        return output
 
     def construct_command(self):
 
@@ -298,6 +315,14 @@ class BCL2Fastq1xRunner(BCL2FastqRunner):
 
     def __init__(self, config, binary):
         BCL2FastqRunner.__init__(self, config, binary)
+
+    def version(self):
+        """
+        Since there is no way of extracting the version used in bcl2fastq 1.x we
+        will have to trust the the configured version is correct.
+        :return: version of bcl2fastq used as specified by config.
+        """
+        return self.config.bcl2fastq_version
 
     def construct_command(self):
 

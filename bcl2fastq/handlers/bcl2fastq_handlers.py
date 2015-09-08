@@ -5,6 +5,7 @@ import os
 
 from bcl2fastq.lib.jobrunner import LocalQAdapter
 from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunnerFactory, Bcl2FastqConfig
+from bcl2fastq import __version__ as version
 from arteria.web.state import State
 from arteria.web.handlers import BaseRestHandler
 
@@ -70,7 +71,7 @@ class VersionsHandler(BaseBcl2FastqHandler):
         """
         Returns all available bcl2fastq versions (as defined by config).
         """
-        available_versions = self.config["bcl2fastq"]["versions"].keys()
+        available_versions = self.config["bcl2fastq"]["versions"]
         self.write_object(available_versions)
 
 class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
@@ -159,9 +160,10 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         try:
             runfolder_config = self.create_config_from_request(runfolder, self.request.body)
 
-            cmd = self.bcl2fastq_cmd_generation_service(self.config). \
-                create_bcl2fastq_runner(runfolder_config). \
-                construct_command()
+            job_runner = self.bcl2fastq_cmd_generation_service(self.config). \
+                create_bcl2fastq_runner(runfolder_config)
+            bcl2fastq_version = job_runner.version()
+            cmd = job_runner.construct_command()
 
             log_base_path = self.config["bcl2fastq_logs_path"]
             log_file = "{0}/{1}.log".format(log_base_path, runfolder)
@@ -184,7 +186,12 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
                 self.request.host,
                 self.reverse_url("status", job_id))
 
-            response_data = {"job_id": job_id, "link": status_end_point, "state": State.STARTED}
+            response_data = {
+                "job_id": job_id,
+                "bcl2fastq_version": bcl2fastq_version,
+                "service_version": version,
+                "link": status_end_point,
+                "state": State.STARTED}
 
             self.set_status(202, reason="started processing")
             self.write_json(response_data)

@@ -27,8 +27,11 @@ class DummyConfig:
         return TestUtils.DUMMY_CONFIG[key]
 
 class FakeRunner(BCL2FastqRunner):
-    def __init__(self):
-        pass
+    def __init__(self, dummy_version):
+        self.dummy_version = dummy_version
+
+    def version(self):
+        return str(self.dummy_version)
 
     def construct_command(self):
         return "fake_bcl_command"
