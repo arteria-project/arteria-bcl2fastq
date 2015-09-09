@@ -98,6 +98,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         # TODO Make sure to escape them for sec. reasons.
         bcl2fastq_version = ""
         runfolder_input = ""
+        samplesheet = ""
         output = ""
         barcode_mismatches = ""
         tiles = ""
@@ -116,6 +117,9 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         if "output" in request_data:
             output = request_data["output"]
 
+        if "samplesheet" in request_data:
+            samplesheet = request_data["samplesheet"]
+
         if "barcode_mismatches" in request_data:
             barcode_mismatches = request_data["barcode_mismatches"]
 
@@ -133,6 +137,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
             bcl2fastq_version,
             runfolder_input,
             output,
+            samplesheet,
             barcode_mismatches,
             tiles,
             use_base_mask,
@@ -147,6 +152,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         can contain one or more of the following parameters:
          - bcl2fastq_version
          - output
+         - samplesheet (provide the entire samplesheet in the request)
          - barcode_mismatches
          - tiles
          - use_base_mask

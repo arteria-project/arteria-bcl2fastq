@@ -1,8 +1,11 @@
 import unittest
+import mock
+import tempfile
 
 from bcl2fastq.lib.bcl2fastq_utils import *
 from bcl2fastq.lib.illumina import Samplesheet
 from test_utils import TestUtils, DummyConfig
+
 
 DUMMY_CONFIG = DummyConfig()
 
@@ -20,6 +23,28 @@ class TestBcl2FastqConfig(unittest.TestCase):
         runfolder = TestBcl2FastqConfig.test_dir + "/sampledata/HiSeq-samples/2014-02_13_average_run"
         index_and_length = Bcl2FastqConfig.get_length_of_indexes(runfolder)
         self.assertEqual(index_and_length, {2: 7})
+
+    def test_write_samplesheet(self):
+        f = tempfile.mktemp()
+        Bcl2FastqConfig.write_samplesheet(TestUtils.DUMMY_SAMPLESHEET_STRING, f)
+        with open(f, "r") as my_file:
+            content = my_file.read()
+            self.assertEqual(content, TestUtils.DUMMY_SAMPLESHEET_STRING)
+        os.remove(f)
+
+    def test_samplesheet_gets_written(self):
+        with mock.patch.object(Bcl2FastqConfig, "write_samplesheet") as ws:
+            # If we provide a samplesheet to the config this should be written.
+            # In this case this write call is mocked away to make testing easier,
+            # but the write it self should be trivial.
+            config = Bcl2FastqConfig(
+                general_config = DUMMY_CONFIG,
+                bcl2fastq_version = "1.8.4",
+                runfolder_input = "test/runfolder",
+                output = "test/output",
+                samplesheet=TestUtils.DUMMY_SAMPLESHEET_STRING)
+
+            ws.assert_called_once_with(TestUtils.DUMMY_SAMPLESHEET_STRING, config.samplesheet_file)
 
     def test_get_bases_mask_per_lane_from_samplesheet(self):
         mock_read_index_lengths = {2: 9, 3: 9}

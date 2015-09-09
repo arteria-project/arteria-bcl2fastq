@@ -21,6 +21,7 @@ class Bcl2FastqConfig:
                  bcl2fastq_version,
                  runfolder_input,
                  output,
+                 samplesheet=None,
                  barcode_mismatches=None,
                  tiles=None,
                  use_base_mask=None,
@@ -33,6 +34,9 @@ class Bcl2FastqConfig:
         :param bcl2fastq_version: version of bcl2fastq to run
         :param runfolder_input: the path to the runfolder to run bcl2fastq on
         :param output: where the output of bcl2fastq should be placed
+        :param samplesheet: a samplesheet as a raw string - if none is provided the samplesheet in the
+                            runfolder will be used. If it is specified this provided string will be
+                            written to a file and passed to bcl2fastq.
         :param barcode_mismatches: how many mismatches to allow in tag.
         :param tiles: tiles to include when running bcl2fastq
         :param use_base_mask: base mask to use
@@ -41,8 +45,15 @@ class Bcl2FastqConfig:
         """
 
         self.runfolder_input = runfolder_input
-        self.samplesheet_file = runfolder_input + "/SampleSheet.csv"
         self.base_calls_input = runfolder_input + "/Data/Intensities/BaseCalls"
+
+        if not samplesheet:
+            self.samplesheet_file = runfolder_input + "/SampleSheet.csv"
+        else:
+            log.debug("Got a new samplesheet. Will use that instead of the one found in the runfolder.")
+            new_samplesheet_file = runfolder_input + "/arteria_samplesheet.csv"
+            Bcl2FastqConfig.write_samplesheet(samplesheet, new_samplesheet_file)
+            self.samplesheet_file = new_samplesheet_file
 
         if bcl2fastq_version:
             self.bcl2fastq_version = bcl2fastq_version
@@ -71,6 +82,11 @@ class Bcl2FastqConfig:
         else:
             import multiprocessing
             self.nbr_of_cores = multiprocessing.cpu_count()
+
+    @staticmethod
+    def write_samplesheet(samplesheet_string, new_samplesheet_file):
+        with open(new_samplesheet_file, "w") as f:
+                f.write(samplesheet_string)
 
     @staticmethod
     def get_bcl2fastq_version_from_run_parameters(runfolder, config):
