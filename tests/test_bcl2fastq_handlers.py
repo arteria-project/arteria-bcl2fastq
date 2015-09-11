@@ -14,6 +14,12 @@ from test_utils import FakeRunner
 
 class TestBcl2FastqHandlers(AsyncHTTPTestCase):
 
+    _start_api_call = 0
+
+    def start_api_call_nbr(self):
+        TestBcl2FastqHandlers._start_api_call += 1
+        return TestBcl2FastqHandlers._start_api_call
+
     API_BASE="/api/1.0"
     MOCK_BCL2FASTQ_DICT =  {1: "y*,8i,8i,y*",
                             2: "y*,6i,n*,y*",
@@ -46,11 +52,14 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
              mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner", return_value=FakeRunner("2.15.2")):
 
             body = {"runfolder_input": "/path/to/runfolder"}
-            response = self.fetch(self.API_BASE + "/start/150415_D00457_0091_AC6281ANXX", method="POST", body=json_encode(body))
+            response = self.fetch(
+                self.API_BASE + "/start/150415_D00457_0091_AC6281ANXX", method="POST", body=json_encode(body))
+
+            api_call_nbr = self.start_api_call_nbr()
 
             self.assertEqual(response.code, 202)
-            self.assertEqual(json.loads(response.body)["job_id"], 1)
-            expected_link = "http://localhost:{0}/api/1.0/status/1".format(self.get_http_port())
+            self.assertEqual(json.loads(response.body)["job_id"], api_call_nbr)
+            expected_link = "http://localhost:{0}/api/1.0/status/{1}".format(self.get_http_port(), api_call_nbr)
             self.assertEqual(json.loads(response.body)["link"], expected_link)
             self.assertEqual(json.loads(response.body)["bcl2fastq_version"], "2.15.2")
             self.assertEqual(json.loads(response.body)["state"], "started")
@@ -64,12 +73,37 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
 
             response = self.fetch(self.API_BASE + "/start/150415_D00457_0091_AC6281ANXX", method="POST", body="")
 
+            api_call_nbr = self.start_api_call_nbr()
+
             self.assertEqual(response.code, 202)
-            self.assertEqual(json.loads(response.body)["job_id"], 2)
-            expected_link = "http://localhost:{0}/api/1.0/status/2".format(self.get_http_port())
+            self.assertEqual(json.loads(response.body)["job_id"], api_call_nbr)
+            expected_link = "http://localhost:{0}/api/1.0/status/{1}".format(self.get_http_port(), api_call_nbr)
             self.assertEqual(json.loads(response.body)["link"], expected_link)
             self.assertEqual(json.loads(response.body)["bcl2fastq_version"], "2.15.2")
             self.assertEqual(json.loads(response.body)["state"], "started")
+
+    def test_start_providing_samplesheet(self):
+        # Use mock to ensure that this will run without
+        # creating the runfolder.
+        with mock.patch.object(os.path, 'isdir', return_value=True), \
+             mock.patch.object(Bcl2FastqConfig, 'get_bcl2fastq_version_from_run_parameters', return_value="2.15.2"), \
+             mock.patch.object(Bcl2FastqConfig, "write_samplesheet") as ws ,\
+             mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner", return_value=FakeRunner("2.15.2")):
+
+            body = {"runfolder_input": "/path/to/runfolder", "samplesheet": TestUtils.DUMMY_SAMPLESHEET_STRING}
+
+            response = self.fetch(
+                self.API_BASE + "/start/150415_D00457_0091_AC6281ANXX", method="POST", body=json_encode(body))
+
+            api_call_nbr = self.start_api_call_nbr()
+
+            self.assertEqual(response.code, 202)
+            self.assertEqual(json.loads(response.body)["job_id"], api_call_nbr)
+            expected_link = "http://localhost:{0}/api/1.0/status/{1}".format(self.get_http_port(), api_call_nbr)
+            self.assertEqual(json.loads(response.body)["link"], expected_link)
+            self.assertEqual(json.loads(response.body)["bcl2fastq_version"], "2.15.2")
+            self.assertEqual(json.loads(response.body)["state"], "started")
+            ws.assert_called_once_with(TestUtils.DUMMY_SAMPLESHEET_STRING, "/data/biotank3/runfolders/150415_D00457_0091_AC6281ANXX/arteria_samplesheet.csv")
 
     def test_status_with_id(self):
         #TODO Add real tests here!
