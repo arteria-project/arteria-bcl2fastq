@@ -86,7 +86,7 @@ class Bcl2FastqConfig:
     @staticmethod
     def write_samplesheet(samplesheet_string, new_samplesheet_file):
         with open(new_samplesheet_file, "w") as f:
-                f.write(samplesheet_string)
+            f.write(samplesheet_string)
 
     @staticmethod
     def get_bcl2fastq_version_from_run_parameters(runfolder, config):
@@ -274,7 +274,7 @@ class BCL2FastqRunner(object):
             log.warning("Failure in running bcl2fastq: {}".format(exc.message))
             return False
         else:
-            log.debug("Successfully finished running bcl2fastq!")
+            log.info("Successfully finished running bcl2fastq!")
             return True
 
 
@@ -287,19 +287,27 @@ class BCL2Fastq2xRunner(BCL2FastqRunner):
         BCL2FastqRunner.__init__(self, config, binary)
 
     def version(self):
-        cmd = [self.binary,
-               "--version",
-               "--min-log-level=NONE",
-               "2>&1 | grep 'bcl2fastq'| head -1"]
-        output = subprocess.check_call(cmd, shell=True, stderr=subprocess.STDOUT)
-        return output
+        from subprocess import CalledProcessError
+        try:
+            cmd = " ".join([self.binary,
+                            "--version",
+                            "--min-log-level=NONE"])
+            log.debug("Command generated was: {}".format(cmd))
+            output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+            # the bcl2fastq version should be on the second line of the output.
+            version = output.splitlines()[1]
+            return version
+        except CalledProcessError as e:
+            log.error("Failed to get version: {0}".format(e.message))
+            log.error("The command was: {0}".format(e.cmd))
 
     def construct_command(self):
 
         commandline_collection = [
             self.binary,
             "--input-dir", self.config.base_calls_input,
-            "--output-dir", self.config.output]
+            "--output-dir", self.config.output,
+            "--sample-sheet", self.config.samplesheet_file]
 
         if self.config.barcode_mismatches:
             commandline_collection.append("--barcode-mismatches " + self.config.barcode_mismatches)

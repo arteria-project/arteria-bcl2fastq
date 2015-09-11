@@ -202,7 +202,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
             self.set_status(202, reason="started processing")
             self.write_json(response_data)
         except RuntimeError as e:
-            log.warning("Failed starting {}. Message: ".format(runfolder, e.message))
+            log.warning("Failed starting {0}. Message: {1}".format(runfolder, e.message))
             self.send_error(status_code=500, reason=e.message)
 
 

@@ -124,12 +124,13 @@ class TestBCL2Fastq2xRunner(unittest.TestCase):
         runner = BCL2Fastq2xRunner(config, "/bcl/binary/path")
         command = runner.construct_command()
         expected_command = "/bcl/binary/path --input-dir test/runfolder/Data/Intensities/BaseCalls " \
-                           "--output-dir test/output --barcode-mismatches 2 " \
+                           "--output-dir test/output " \
+                           "--sample-sheet test/runfolder/SampleSheet.csv " \
+                           "--barcode-mismatches 2 " \
                            "--tiles s1,s2,s3 " \
                            "--use-bases-mask y*,i6,i6,y* --use-bases-mask 1:y*,i5,i5,y* " \
                            "--my-best-arg 1 --my-best-arg 2"
         self.assertEqual(command, expected_command)
-
 
 class TestBCL2FastqRunner(unittest.TestCase):
 
