@@ -267,6 +267,9 @@ class BCL2FastqRunner(object):
                          there, in which case, do nothing.
         """
         try:
+            log.debug("Create symlink from {} to {}.".
+                        format(self.config.runfolder_input + "/Unaligned",
+                               self.config.output))
             os.symlink(self.config.output, self.config.runfolder_input + "/Unaligned")
             return None
         except OSError as e:
@@ -280,28 +283,6 @@ class BCL2FastqRunner(object):
                                  self.config.output,
                                  e.message))
                 raise e
-
-    def run(self):
-        """
-        Will run the command provided by `_construct_command` and
-        create a soft link from the runfolder in question, to the
-         output directory, named Unaligned. E.g.
-            /path/to/runfolder/Unaligned -> /path/to/output
-        :return: True is successfully run, else False.
-        """
-
-        self.symlink_output_to_unaligned()
-        self.command = self.construct_command()
-        log.debug("Running bcl2fastq with command: " + self.command)
-
-        try:
-            output = subprocess.check_call(self.command, shell=True, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as exc:
-            log.warning("Failure in running bcl2fastq: {}".format(exc.message))
-            return False
-        else:
-            log.info("Successfully finished running bcl2fastq!")
-            return True
 
 
 class BCL2Fastq2xRunner(BCL2FastqRunner):

@@ -157,32 +157,24 @@ class TestBCL2FastqRunner(unittest.TestCase):
         with patch.object(os, 'symlink', return_value=None) as m:
             dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, None)
             dummy_runner.symlink_output_to_unaligned()
-            m.assert_called_with(TestBCL2FastqRunner.config.output, TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
+            m.assert_called_with(
+                TestBCL2FastqRunner.config.output,
+                TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
 
         # Check that trying to create an already existing softlink doesn't break the function.
         with patch.object(os, 'symlink', side_effect=OSError(17, "message")) as m:
             dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, None)
             dummy_runner.symlink_output_to_unaligned()
-            m.assert_called_with(TestBCL2FastqRunner.config.output, TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
+            m.assert_called_with(TestBCL2FastqRunner.config.output,
+                                 TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
 
         # While any other error should
         with patch.object(os, 'symlink', side_effect=OSError()) as m:
             with self.assertRaises(OSError):
                 dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, None)
                 dummy_runner.symlink_output_to_unaligned()
-                m.assert_called_with(TestBCL2FastqRunner.config.output, TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
-
-    def test__successful_run(self):
-        with patch.object(BCL2FastqRunner, 'symlink_output_to_unaligned', return_value=None) as m:
-            dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, "echo 'high tech low life'; exit 0")
-            success = dummy_runner.run()
-            self.assertTrue(success)
-
-    def test__unsuccessful_run(self):
-        with patch.object(BCL2FastqRunner, 'symlink_output_to_unaligned', return_value=None) as m:
-            dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None,  "echo 'high tech low life'; exit 1")
-            success = dummy_runner.run()
-            self.assertFalse(success)
+                m.assert_called_with(TestBCL2FastqRunner.config.output,
+                                     TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
 
 class TestBCL2Fastq1xRunner(unittest.TestCase):
 

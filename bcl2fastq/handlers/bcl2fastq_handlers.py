@@ -170,6 +170,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
                 create_bcl2fastq_runner(runfolder_config)
             bcl2fastq_version = job_runner.version()
             cmd = job_runner.construct_command()
+            job_runner.symlink_output_to_unaligned()
 
             log_base_path = self.config["bcl2fastq_logs_path"]
             log_file = "{0}/{1}.log".format(log_base_path, runfolder)
