@@ -1,5 +1,5 @@
 import subprocess
-import os.path
+import os
 from itertools import groupby
 import logging
 
@@ -259,12 +259,38 @@ class BCL2FastqRunner(object):
         """
         raise NotImplementedError("Subclasses should implement this!")
 
+    def symlink_output_to_unaligned(self):
+        """
+        Create a symlink from `runfolder/Unaligned` to what has been defined as the output directory.
+        :return: None
+        :raises: OSError if there was any problem creating the symlink, except for that it was already
+                         there, in which case, do nothing.
+        """
+        try:
+            os.symlink(self.config.output, self.config.runfolder_input + "/Unaligned")
+            return None
+        except OSError as e:
+            if e.errno == os.errno.EEXIST:
+                log.warning("Symlink from {} to {} already exits, will not recreate it...".
+                            format(self.config.runfolder_input + "/Unaligned",
+                                   self.config.output))
+            else:
+                log.error("Problem creating symlink from {} to {}. Message: {}".
+                          format(self.config.runfolder_input + "/Unaligned",
+                                 self.config.output,
+                                 e.message))
+                raise e
+
     def run(self):
         """
-        Will run the command provided by `_construct_command`
+        Will run the command provided by `_construct_command` and
+        create a soft link from the runfolder in question, to the
+         output directory, named Unaligned. E.g.
+            /path/to/runfolder/Unaligned -> /path/to/output
         :return: True is successfully run, else False.
         """
 
+        self.symlink_output_to_unaligned()
         self.command = self.construct_command()
         log.debug("Running bcl2fastq with command: " + self.command)
 

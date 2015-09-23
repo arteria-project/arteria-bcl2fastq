@@ -1,6 +1,7 @@
 import unittest
-import mock
+from mock import patch
 import tempfile
+import os
 
 from bcl2fastq.lib.bcl2fastq_utils import *
 from bcl2fastq.lib.illumina import Samplesheet
@@ -33,7 +34,7 @@ class TestBcl2FastqConfig(unittest.TestCase):
         os.remove(f)
 
     def test_samplesheet_gets_written(self):
-        with mock.patch.object(Bcl2FastqConfig, "write_samplesheet") as ws:
+        with patch.object(Bcl2FastqConfig, "write_samplesheet") as ws:
             # If we provide a samplesheet to the config this should be written.
             # In this case this write call is mocked away to make testing easier,
             # but the write it self should be trivial.
@@ -134,6 +135,16 @@ class TestBCL2Fastq2xRunner(unittest.TestCase):
 
 class TestBCL2FastqRunner(unittest.TestCase):
 
+    config = Bcl2FastqConfig(
+        general_config = DUMMY_CONFIG,
+        bcl2fastq_version = "2.15.2",
+        runfolder_input = "test/runfolder",
+        output = "test/output",
+        barcode_mismatches = "2",
+        tiles="s1,s2,s3",
+        use_base_mask="--use-bases-mask y*,i6,i6,y* --use-bases-mask 1:y*,i5,i5,y*",
+        additional_args="--my-best-arg 1 --my-best-arg 2")
+
     class DummyBCL2FastqRunner(BCL2FastqRunner):
         def __init__(self, config, binary, dummy_command):
             self.dummy_command = dummy_command
@@ -142,17 +153,36 @@ class TestBCL2FastqRunner(unittest.TestCase):
         def construct_command(self):
             return self.dummy_command
 
-    def test__successful_run(self):
+    def test_symlink_output_to_unaligned(self):
+        with patch.object(os, 'symlink', return_value=None) as m:
+            dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, None)
+            dummy_runner.symlink_output_to_unaligned()
+            m.assert_called_with(TestBCL2FastqRunner.config.output, TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
 
-        dummy_runner = self.DummyBCL2FastqRunner(None, None, "echo 'high tech low life'; exit 0")
-        success = dummy_runner.run()
-        self.assertTrue(success)
+        # Check that trying to create an already existing softlink doesn't break the function.
+        with patch.object(os, 'symlink', side_effect=OSError(17, "message")) as m:
+            dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, None)
+            dummy_runner.symlink_output_to_unaligned()
+            m.assert_called_with(TestBCL2FastqRunner.config.output, TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
+
+        # While any other error should
+        with patch.object(os, 'symlink', side_effect=OSError()) as m:
+            with self.assertRaises(OSError):
+                dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, None)
+                dummy_runner.symlink_output_to_unaligned()
+                m.assert_called_with(TestBCL2FastqRunner.config.output, TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
+
+    def test__successful_run(self):
+        with patch.object(BCL2FastqRunner, 'symlink_output_to_unaligned', return_value=None) as m:
+            dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, "echo 'high tech low life'; exit 0")
+            success = dummy_runner.run()
+            self.assertTrue(success)
 
     def test__unsuccessful_run(self):
-
-        dummy_runner = self.DummyBCL2FastqRunner(None, None,  "echo 'high tech low life'; exit 1")
-        success = dummy_runner.run()
-        self.assertFalse(success)
+        with patch.object(BCL2FastqRunner, 'symlink_output_to_unaligned', return_value=None) as m:
+            dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None,  "echo 'high tech low life'; exit 1")
+            success = dummy_runner.run()
+            self.assertFalse(success)
 
 class TestBCL2Fastq1xRunner(unittest.TestCase):
 
