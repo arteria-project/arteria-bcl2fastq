@@ -262,46 +262,28 @@ class BCL2FastqRunner(object):
     def symlink_output_to_unaligned(self):
         """
         Create a symlink from `runfolder/Unaligned` to what has been defined as the output directory.
-        :return: None
         :raises: OSError if there was any problem creating the symlink, except for that it was already
                          there, in which case, do nothing.
         """
+        link_path = self.config.runfolder_input + "/Unaligned"
+        link_target_path = self.config.output
+
         try:
-            os.symlink(self.config.output, self.config.runfolder_input + "/Unaligned")
-            return None
+            log.debug("Create symlink from {} to {}.".
+                      format(link_path,
+                             link_target_path))
+            os.symlink(link_target_path, link_path)
         except OSError as e:
             if e.errno == os.errno.EEXIST:
-                log.warning("Symlink from {} to {} already exits, will not recreate it...".
-                            format(self.config.runfolder_input + "/Unaligned",
-                                   self.config.output))
+                log.warning("Symlink from {} to {} already exits, will remove it and recreate it...".
+                            format(link_path, link_target_path))
+                log.warning("Removing link: {}".format(link_path))
+                os.remove(link_path)
+                os.symlink(link_target_path, link_path)
             else:
                 log.error("Problem creating symlink from {} to {}. Message: {}".
-                          format(self.config.runfolder_input + "/Unaligned",
-                                 self.config.output,
-                                 e.message))
+                          format(link_path, link_target_path, e.message))
                 raise e
-
-    def run(self):
-        """
-        Will run the command provided by `_construct_command` and
-        create a soft link from the runfolder in question, to the
-         output directory, named Unaligned. E.g.
-            /path/to/runfolder/Unaligned -> /path/to/output
-        :return: True is successfully run, else False.
-        """
-
-        self.symlink_output_to_unaligned()
-        self.command = self.construct_command()
-        log.debug("Running bcl2fastq with command: " + self.command)
-
-        try:
-            output = subprocess.check_call(self.command, shell=True, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as exc:
-            log.warning("Failure in running bcl2fastq: {}".format(exc.message))
-            return False
-        else:
-            log.info("Successfully finished running bcl2fastq!")
-            return True
 
 
 class BCL2Fastq2xRunner(BCL2FastqRunner):
