@@ -262,7 +262,6 @@ class BCL2FastqRunner(object):
     def symlink_output_to_unaligned(self):
         """
         Create a symlink from `runfolder/Unaligned` to what has been defined as the output directory.
-        :return: None
         :raises: OSError if there was any problem creating the symlink, except for that it was already
                          there, in which case, do nothing.
         """
@@ -271,17 +270,16 @@ class BCL2FastqRunner(object):
 
         try:
             log.debug("Create symlink from {} to {}.".
-                        format(link_path,
-                               link_target_path))
+                      format(link_path,
+                             link_target_path))
             os.symlink(link_target_path, link_path)
-            return None
         except OSError as e:
             if e.errno == os.errno.EEXIST:
                 log.warning("Symlink from {} to {} already exits, will remove it and recreate it...".
                             format(link_path, link_target_path))
                 log.warning("Removing link: {}".format(link_path))
                 os.remove(link_path)
-                self.symlink_output_to_unaligned()
+                os.symlink(link_target_path, link_path)
             else:
                 log.error("Problem creating symlink from {} to {}. Message: {}".
                           format(link_path, link_target_path, e.message))

@@ -162,15 +162,18 @@ class TestBCL2FastqRunner(unittest.TestCase):
                 TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
 
         # Check that trying to create an already existing softlink doesn't break the function.
-        with patch.object(os, 'remove', return_value=None), \
-             patch.object(os, 'symlink', side_effect=OSError(17, "message")) as m:
+        # Please note that the second side effect is None, which means that the second time th
+        # mock is called it will work.
+        with patch.object(os, 'remove', return_value=None) as r, \
+             patch.object(os, 'symlink', side_effect=[OSError(17, "message"), None]) as m:
             dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, None)
             dummy_runner.symlink_output_to_unaligned()
             m.assert_called_with(TestBCL2FastqRunner.config.output,
                                  TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
+            r.assert_called_with(TestBCL2FastqRunner.config.runfolder_input + "/Unaligned")
 
         # While any other error should
-        with patch.object(os, 'symlink', side_effect=OSError()) as m:
+        with patch.object(os, 'symlink', side_effect=OSError(1, "message")) as m:
             with self.assertRaises(OSError):
                 dummy_runner = self.DummyBCL2FastqRunner(TestBCL2FastqRunner.config, None, None)
                 dummy_runner.symlink_output_to_unaligned()
