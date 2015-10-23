@@ -121,7 +121,13 @@ class Bcl2FastqConfig:
         return dict(indexes_and_lengths)
 
     @staticmethod
-    def get_bases_mask_per_lane_from_samplesheet(samplesheet, index_lengths):
+    def is_single_read(runfolder):
+        meta_data = InteropMetadata(runfolder)
+        number_of_reads = filter(lambda x: not x["is_index"], meta_data.read_config)
+        return len(number_of_reads) < 2
+
+    @staticmethod
+    def get_bases_mask_per_lane_from_samplesheet(samplesheet, index_lengths, is_single_read):
         """
         Create a bases-mask string per lane for based on the length of the index in the
         provided samplesheet. This assumes that all indexes within a lane have
@@ -134,32 +140,49 @@ class Bcl2FastqConfig:
         :param samplesheet: samplesheet to fetch the index lengths from
         :param index_lengths: dict of index lengths (e.g. "{1: 7, 2: 8}"),
         normally parsed from run meta data.
+        :param is_single_read: True if this is a single read run, else false.
         :return a dict of the lane and base mask to use, e.g.:
-                 { 1:"y*,iiiiiiiin*,iiiiiiiin*,y*" , 2:"y*,iiiiii,n*,y*  [etc] }
+                 { 1:"y*,i7n*,i7n*,y*" , 2:"y*,i5,n*,y*  [etc] }
         """
 
-        def pad_with_ignore(length_of_index_in_samplesheet, length_of_index_read):
+        def build_index_string(length_tuple):
+            """
+            Builds the index mask string
+            :param length_tuple: a tuple of the length of the index in the samplesheet and in the read, e.g. (3, 5)
+            :return: a index string, e.g. "i5n*" or "n*" or "i3", depending on the situation.
+            """
+            length_of_index_in_samplesheet = length_tuple[0]
+            length_of_index_read = length_tuple[1]
             difference = length_of_index_read - length_of_index_in_samplesheet
+
             assert difference >= 0, "Sample sheet indicates that index is longer than what was read by the sequencer!"
-            if difference > 0:
+
+            if length_of_index_in_samplesheet == 0:
+                # If there is no index in the samplesheet, ignore it in the base-mask
                 return "n*"
-            else:
-                return ""
 
-        def construct_double_index_basemask(index1, index2):
-            index1_length = len(index1)
-            index2_length = len(index2)
-            return "y*,{0}{1}{2},{3}{4}{5},y*".format(
-                "i", index1_length, pad_with_ignore(index1_length, index_lengths[2]),
-                "i", index2_length, pad_with_ignore(index2_length, index_lengths[3]))
-
-        def construct_single_index_basemask(idx, flowcell_has_double_idx):
-            idx_length = len(idx)
-            if flowcell_has_double_idx:
-                return "y*,{0}{1}{2},{3},y*".format(
-                    "i", idx_length, pad_with_ignore(idx_length, index_lengths[2]), "n*")
+            if difference > 0:
+                # Pad the end if there is a difference here.
+                return "i" + str(length_of_index_in_samplesheet) + "n*"
             else:
-                return "y*,{0}{1}{2},y*".format("i", idx_length, pad_with_ignore(idx_length, index_lengths[2]))
+                return "i" + str(length_of_index_in_samplesheet)
+
+        def construct_base_mask(samplesheet_idx_list):
+            """
+            Will construct the base mask.
+            :param samplesheet_idx_list: A list of the indexes in the samplesheet
+            :return a base mask string
+            """
+            samplesheet_idx_list = map(len, samplesheet_idx_list)
+            samplesheet_idx_and_read_length_tuples = zip(samplesheet_idx_list, index_lengths.itervalues())
+            idx_masks = map(
+                build_index_string,
+                samplesheet_idx_and_read_length_tuples)
+
+            if is_single_read:
+                return ",".join(["y*"] + idx_masks)
+            else:
+                return ",".join(["y*"] + idx_masks + ["y*"])
 
         def by_lane(x):
             return x.lane
@@ -168,14 +191,12 @@ class Bcl2FastqConfig:
 
         first_sample_in_each_lane = {k: next(v) for k, v in lanes_and_indexes}
 
-        contains_double_index = len(index_lengths) > 1
-
         base_masks = {}
         for lane, sample_row in first_sample_in_each_lane.iteritems():
             if sample_row.index2:
-                base_masks[lane] = construct_double_index_basemask(sample_row.index1.strip(), sample_row.index2.strip())
+                base_masks[lane] = construct_base_mask([sample_row.index1.strip(), sample_row.index2.strip()])
             else:
-                base_masks[lane] = construct_single_index_basemask(sample_row.index1.strip(), contains_double_index)
+                base_masks[lane] = construct_base_mask([sample_row.index1.strip(), ""])
 
         return base_masks
 
@@ -329,9 +350,10 @@ class BCL2Fastq2xRunner(BCL2FastqRunner):
             commandline_collection.append(self.config.use_base_mask)
         else:
             length_of_indexes = Bcl2FastqConfig.get_length_of_indexes(self.config.runfolder_input)
+            is_single_read_run = Bcl2FastqConfig.is_single_read(self.config.runfolder_input)
             samplesheet = Samplesheet(self.config.samplesheet_file)
             lanes_and_base_mask = Bcl2FastqConfig. \
-                get_bases_mask_per_lane_from_samplesheet(samplesheet, length_of_indexes)
+                get_bases_mask_per_lane_from_samplesheet(samplesheet, length_of_indexes, is_single_read_run)
             for lane, base_mask in lanes_and_base_mask.iteritems():
                 commandline_collection.append("--use-bases-mask {0}:{1}".format(lane, base_mask))
 
@@ -383,8 +405,12 @@ class BCL2Fastq1xRunner(BCL2FastqRunner):
         else:
             length_of_indexes = Bcl2FastqConfig.get_length_of_indexes(self.config.runfolder_input)
             samplesheet = Samplesheet(self.config.samplesheet_file)
+            is_single_read_run = Bcl2FastqConfig.is_single_read(self.config.runfolder_input)
             lanes_and_base_mask = \
-                Bcl2FastqConfig.get_bases_mask_per_lane_from_samplesheet(samplesheet, length_of_indexes)
+                Bcl2FastqConfig.get_bases_mask_per_lane_from_samplesheet(
+                    samplesheet,
+                    length_of_indexes,
+                    is_single_read_run)
             base_masks_as_set = set(lanes_and_base_mask.values())
 
             assert len(base_masks_as_set) is 1, "For bcl2fastq 1.8.4 there is no support for " \
