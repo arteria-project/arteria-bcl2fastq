@@ -155,7 +155,8 @@ class Bcl2FastqConfig:
             length_of_index_read = length_tuple[1]
             difference = length_of_index_read - length_of_index_in_samplesheet
 
-            assert difference >= 0, "Sample sheet indicates that index is longer than what was read by the sequencer!"
+            if not difference >= 0:
+                raise ValueError("Sample sheet indicates that index is longer than what was read by the sequencer!")
 
             if length_of_index_in_samplesheet == 0:
                 # If there is no index in the samplesheet, ignore it in the base-mask
