@@ -14,11 +14,20 @@ class TestBcl2FastqConfig(unittest.TestCase):
 
     test_dir = os.path.dirname(os.path.realpath(__file__))
     samplesheet_file = test_dir + "/sampledata/new_samplesheet_example.csv"
+    samplesheet_with_no_tag = test_dir + "/sampledata/no_tag_samplesheet_example.csv"
 
     def test_get_bcl2fastq_version_from_run_parameters(self):
         runfolder = TestBcl2FastqConfig.test_dir + "/sampledata/HiSeq-samples/2014-02_13_average_run"
         version = Bcl2FastqConfig.get_bcl2fastq_version_from_run_parameters(runfolder, TestUtils.DUMMY_CONFIG)
         self.assertEqual(version, "1.8.4")
+
+    def test_is_single_read_true(self):
+        runfolder = TestBcl2FastqConfig.test_dir + "/sampledata/HiSeq-samples/2014-02_13_average_run"
+        self.assertFalse(Bcl2FastqConfig.is_single_read(runfolder))
+
+    def test_is_single_read_false(self):
+        runfolder = TestBcl2FastqConfig.test_dir + "/sampledata/MiSeq-samples/2014-02_11_50kit_single_read"
+        self.assertTrue(Bcl2FastqConfig.is_single_read(runfolder))
 
     def test_get_length_of_indexes(self):
         runfolder = TestBcl2FastqConfig.test_dir + "/sampledata/HiSeq-samples/2014-02_13_average_run"
@@ -60,7 +69,23 @@ class TestBcl2FastqConfig(unittest.TestCase):
                                }
         samplesheet = Samplesheet(TestBcl2FastqConfig.samplesheet_file)
         actual_bases_mask = Bcl2FastqConfig. \
-            get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths)
+            get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths, False)
+        self.assertEqual(expected_bases_mask, actual_bases_mask)
+
+    def test_get_bases_mask_per_lane_from_samplesheet_single_read(self):
+        mock_read_index_lengths = {2: 9, 3: 9}
+        expected_bases_mask = {1: "y*,i8n*,i8n*",
+                               2: "y*,i6n*,n*",
+                               3: "y*,i6n*,n*",
+                               4: "y*,i7n*,n*",
+                               5: "y*,i7n*,n*",
+                               6: "y*,i7n*,n*",
+                               7: "y*,i7n*,n*",
+                               8: "y*,i7n*,n*",
+                               }
+        samplesheet = Samplesheet(TestBcl2FastqConfig.samplesheet_file)
+        actual_bases_mask = Bcl2FastqConfig. \
+            get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths, True)
         self.assertEqual(expected_bases_mask, actual_bases_mask)
 
     def test_get_bases_mask_per_lane_from_samplesheet_invalid_length_combo(self):
@@ -68,9 +93,26 @@ class TestBcl2FastqConfig(unittest.TestCase):
         mock_read_index_lengths = {2: 4, 3: 4}
         samplesheet = Samplesheet(TestBcl2FastqConfig.samplesheet_file)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             Bcl2FastqConfig. \
-                get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths)
+                get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths, False)
+
+    def test_get_bases_mask_per_lane_from_samplesheet_no_tag(self):
+        # If we don't have tag for one lane in the samplesheet.
+        mock_read_index_lengths = {2: 6}
+        expected_bases_mask = {1: "y*,n*,y*",
+                               2: "y*,n*,y*",
+                               3: "y*,i6,y*",
+                               4: "y*,i6,y*",
+                               5: "y*,i6,y*",
+                               6: "y*,i6,y*",
+                               7: "y*,n*,y*",
+                               8: "y*,n*,y*",
+                               }
+        samplesheet = Samplesheet(TestBcl2FastqConfig.samplesheet_with_no_tag)
+        actual_bases_mask = Bcl2FastqConfig. \
+            get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths, False)
+        self.assertEqual(expected_bases_mask, actual_bases_mask)
 
 
 class TestBCL2FastqRunnerFactory(unittest.TestCase):
