@@ -106,7 +106,7 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
             self.assertEqual(json.loads(response.body)["link"], expected_link)
             self.assertEqual(json.loads(response.body)["bcl2fastq_version"], "2.15.2")
             self.assertEqual(json.loads(response.body)["state"], "started")
-            ws.assert_called_once_with(TestUtils.DUMMY_SAMPLESHEET_STRING, "/data/biotank3/runfolders/150415_D00457_0091_AC6281ANXX/arteria_samplesheet.csv")
+            ws.assert_called_once_with(TestUtils.DUMMY_SAMPLESHEET_STRING, "/data/biotank3/runfolders/150415_D00457_0091_AC6281ANXX/SampleSheet.csv")
 
     def test_status_with_id(self):
         #TODO Add real tests here!

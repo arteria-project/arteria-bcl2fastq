@@ -2,6 +2,8 @@ import subprocess
 import os
 from itertools import groupby
 import logging
+import shutil
+import time
 
 from illuminate.metadata import InteropMetadata
 
@@ -51,7 +53,11 @@ class Bcl2FastqConfig:
             self.samplesheet_file = runfolder_input + "/SampleSheet.csv"
         else:
             log.debug("Got a new samplesheet. Will use that instead of the one found in the runfolder.")
-            new_samplesheet_file = runfolder_input + "/arteria_samplesheet.csv"
+            new_samplesheet_file = runfolder_input + "/SampleSheet.csv"
+
+            if os.path.exists(new_samplesheet_file):
+                Bcl2FastqConfig.copy_old_samplesheet(new_samplesheet_file)
+
             Bcl2FastqConfig.write_samplesheet(samplesheet, new_samplesheet_file)
             self.samplesheet_file = new_samplesheet_file
 
@@ -82,6 +88,13 @@ class Bcl2FastqConfig:
         else:
             import multiprocessing
             self.nbr_of_cores = multiprocessing.cpu_count()
+
+    @staticmethod
+    def copy_old_samplesheet(new_samplesheet_file):
+        new_path_for_old_samplesheet = new_samplesheet_file + time.strftime("%Y%m%d-%H%M%S")
+        log.debug("Original samplesheet: {} copied to: {}. ".
+                  format(new_samplesheet_file, new_path_for_old_samplesheet))
+        shutil.copy(new_samplesheet_file,  new_path_for_old_samplesheet)
 
     @staticmethod
     def write_samplesheet(samplesheet_string, new_samplesheet_file):
