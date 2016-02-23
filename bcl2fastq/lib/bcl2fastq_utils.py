@@ -431,7 +431,7 @@ class BCL2Fastq1xRunner(BCL2FastqRunner):
             base_masks_as_set = set(lanes_and_base_mask.values())
 
             if len(base_masks_as_set) is 1:
-                raise ArteriaException("For bcl2fastq 1.8.4 there is no support for "
+                raise ArteriaUsageException("For bcl2fastq 1.8.4 there is no support for "
                                        "mixing different bases masks for different lanes")
 
             # Here we are forced to use the same bases mask was always used for all lanes.

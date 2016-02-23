@@ -113,7 +113,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         runfolder_input = "{0}/{1}".format(runfolder_base_path, runfolder)
 
         if not os.path.isdir(runfolder_input):
-            raise ArteriaException("No such file: {0}".format(runfolder_input))
+            raise ArteriaUsageException("No such file: {0}".format(runfolder_input))
 
         if "bcl2fastq_version" in request_data:
             bcl2fastq_version = request_data["bcl2fastq_version"]
@@ -205,7 +205,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
 
             self.set_status(202, reason="started processing")
             self.write_json(response_data)
-        except ArteriaException as e:
+        except ArteriaUsageException as e:
             log.warning("Failed starting {0}. Message: {1}".format(runfolder, e.message))
             self.send_error(status_code=500, reason=e.message)
 
@@ -256,8 +256,8 @@ class StopHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
                 self.runner_service().stop(job_id)
                 self.set_status(200)
             else:
-                ArteriaException("Unknown job to stop")
-        except ArteriaException as e:
+                ArteriaUsageException("Unknown job to stop")
+        except ArteriaUsageException as e:
             log.warning("Failed stopping job: {}. Message: ".format(job_id, e.message))
             self.send_error(500, reason=e.message)
 
