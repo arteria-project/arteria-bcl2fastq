@@ -6,6 +6,7 @@ import os
 from bcl2fastq.lib.jobrunner import LocalQAdapter
 from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunnerFactory, Bcl2FastqConfig
 from bcl2fastq import __version__ as version
+from arteria.exceptions import ArteriaUsageException
 from arteria.web.state import State
 from arteria.web.handlers import BaseRestHandler
 
@@ -109,7 +110,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         runfolder_input = "{0}/{1}".format(runfolder_base_path, runfolder)
 
         if not os.path.isdir(runfolder_input):
-            raise RuntimeError("No such file: {0}".format(runfolder_input))
+            raise ArteriaException("No such file: {0}".format(runfolder_input))
 
         if "bcl2fastq_version" in request_data:
             bcl2fastq_version = request_data["bcl2fastq_version"]
@@ -202,9 +203,10 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
 
             self.set_status(202, reason="started processing")
             self.write_json(response_data)
-        except RuntimeError as e:
+        except ArteriaException as e:
             log.warning("Failed starting {0}. Message: {1}".format(runfolder, e.message))
             self.send_error(status_code=500, reason=e.message)
+
 
 
 class StatusHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
@@ -252,8 +254,8 @@ class StopHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
                 self.runner_service().stop(job_id)
                 self.set_status(200)
             else:
-                ValueError("Unknown job to stop")
-        except ValueError as e:
+                ArteriaException("Unknown job to stop")
+        except ArteriaException as e:
             log.warning("Failed stopping job: {}. Message: ".format(job_id, e.message))
             self.send_error(500, reason=e.message)
 
