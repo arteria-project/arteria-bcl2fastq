@@ -136,3 +136,7 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
             response = self.fetch(self.API_BASE + "/logs/coolest_runfolder", method="GET")
             self.assertEqual(response.code, 200)
             self.assertEqual(json.loads(response.body)["log"], "This is a string")
+
+    def test_get_logs_trying_to_reach_other_files(self):
+        response = self.fetch(self.API_BASE + "/logs/../../../etc/shadow", method="GET")
+        self.assertEqual(response.code, 404)
