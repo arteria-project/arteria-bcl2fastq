@@ -15,7 +15,8 @@ def routes(**kwargs):
         url(r"/api/1.0/versions", VersionsHandler, name="versions", kwargs=kwargs),
         url(r"/api/1.0/start/([\w_-]+)", StartHandler, name="start", kwargs=kwargs),
         url(r"/api/1.0/status/(\d*)", StatusHandler, name="status", kwargs=kwargs),
-        url(r"/api/1.0/stop/([\d|all]*)", StopHandler, name="stop", kwargs=kwargs)
+        url(r"/api/1.0/stop/([\d|all]*)", StopHandler, name="stop", kwargs=kwargs),
+        url(r"/api/1.0/logs/([\w_-]+)", Bcl2FastqLogHandler, name="logs", kwargs=kwargs)
     ]
 
 def start():
