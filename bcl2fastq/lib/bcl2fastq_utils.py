@@ -7,6 +7,8 @@ import time
 
 from illuminate.metadata import InteropMetadata
 
+
+from arteria.exceptions import ArteriaUsageException
 from bcl2fastq.lib.illumina import Samplesheet
 
 log = logging.getLogger(__name__)
@@ -169,7 +171,8 @@ class Bcl2FastqConfig:
             difference = length_of_index_read - length_of_index_in_samplesheet
 
             if not difference >= 0:
-                raise ValueError("Sample sheet indicates that index is longer than what was read by the sequencer!")
+                raise ArteriaUsageException("Sample sheet indicates that index is "
+                                       "longer than what was read by the sequencer!")
 
             if length_of_index_in_samplesheet == 0:
                 # If there is no index in the samplesheet, ignore it in the base-mask
@@ -427,8 +430,9 @@ class BCL2Fastq1xRunner(BCL2FastqRunner):
                     is_single_read_run)
             base_masks_as_set = set(lanes_and_base_mask.values())
 
-            assert len(base_masks_as_set) is 1, "For bcl2fastq 1.8.4 there is no support for " \
-                                                "mixing different bases masks for different lanes"
+            if len(base_masks_as_set) is 1:
+                raise ArteriaException("For bcl2fastq 1.8.4 there is no support for "
+                                       "mixing different bases masks for different lanes")
 
             # Here we are forced to use the same bases mask was always used for all lanes.
             commandline_collection.append("--use_bases_mask " + lanes_and_base_mask.values()[0])
