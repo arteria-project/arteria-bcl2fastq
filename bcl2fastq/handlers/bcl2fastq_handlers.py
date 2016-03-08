@@ -6,8 +6,11 @@ import os
 from bcl2fastq.lib.jobrunner import LocalQAdapter
 from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunnerFactory, Bcl2FastqConfig
 from bcl2fastq import __version__ as version
+from bcl2fastq.lib.bcl2fastq_logs import Bcl2FastqLogFileProvider
+from arteria.exceptions import ArteriaUsageException
 from arteria.web.state import State
 from arteria.web.handlers import BaseRestHandler
+
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +62,7 @@ class BaseBcl2FastqHandler(BaseRestHandler):
         to subclasses.
         """
         self.config = config
+        self.bcl2fastq_log_file_provider = Bcl2FastqLogFileProvider(self.config)
 
 
 class VersionsHandler(BaseBcl2FastqHandler):
@@ -109,7 +113,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         runfolder_input = "{0}/{1}".format(runfolder_base_path, runfolder)
 
         if not os.path.isdir(runfolder_input):
-            raise RuntimeError("No such file: {0}".format(runfolder_input))
+            raise ArteriaUsageException("No such file: {0}".format(runfolder_input))
 
         if "bcl2fastq_version" in request_data:
             bcl2fastq_version = request_data["bcl2fastq_version"]
@@ -172,8 +176,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
             cmd = job_runner.construct_command()
             job_runner.symlink_output_to_unaligned()
 
-            log_base_path = self.config["bcl2fastq_logs_path"]
-            log_file = "{0}/{1}.log".format(log_base_path, runfolder)
+            log_file = self.bcl2fastq_log_file_provider.log_file_path(runfolder)
 
             job_id = self.runner_service().start(
                 cmd,
@@ -202,9 +205,10 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
 
             self.set_status(202, reason="started processing")
             self.write_json(response_data)
-        except RuntimeError as e:
+        except ArteriaUsageException as e:
             log.warning("Failed starting {0}. Message: {1}".format(runfolder, e.message))
             self.send_error(status_code=500, reason=e.message)
+
 
 
 class StatusHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
@@ -252,10 +256,28 @@ class StopHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
                 self.runner_service().stop(job_id)
                 self.set_status(200)
             else:
-                ValueError("Unknown job to stop")
-        except ValueError as e:
+                ArteriaUsageException("Unknown job to stop")
+        except ArteriaUsageException as e:
             log.warning("Failed stopping job: {}. Message: ".format(job_id, e.message))
             self.send_error(500, reason=e.message)
 
 
+class Bcl2FastqLogHandler(BaseBcl2FastqHandler):
+    """
+    Gets the content of the log for a particular runfolder
+    """
 
+    def get(self, runfolder):
+        """
+        Get the content of the log for a particular runfolder
+        :param runfolder:
+        :return:
+        """
+        try:
+            log_content = self.bcl2fastq_log_file_provider.get_log_for_runfolder(runfolder)
+            response_data = {"runfolder": runfolder, "log": log_content}
+            self.set_status(200)
+            self.write_json(response_data)
+        except IOError as e:
+            log.warning("Problem with accessing {}, message: {}".format(runfolder, e.message))
+            self.send_error(500, reason=e.message)

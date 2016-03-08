@@ -93,7 +93,7 @@ class TestBcl2FastqConfig(unittest.TestCase):
         mock_read_index_lengths = {2: 4, 3: 4}
         samplesheet = Samplesheet(TestBcl2FastqConfig.samplesheet_file)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArteriaUsageException):
             Bcl2FastqConfig. \
                 get_bases_mask_per_lane_from_samplesheet(samplesheet, mock_read_index_lengths, False)
 
