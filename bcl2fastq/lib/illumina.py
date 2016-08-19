@@ -77,7 +77,7 @@ class Samplesheet:
         def find_data_line():
             enumurated_lines = enumerate(samplesheet_file_handle)
             lines_with_data = filter(lambda x: "[Data]" in x[1], enumurated_lines)
-            assert len(lines_with_data) == 1, "The wasn't strictly one line in samplesheet with line '[Data]'"
+            assert len(lines_with_data) == 1, "There wasn't strictly one line in samplesheet with line '[Data]'"
             return lines_with_data[0][0]
 
         def row_to_sample_row(index_and_row):
