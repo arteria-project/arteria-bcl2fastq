@@ -1,36 +1,55 @@
 Arteria bcl2fastq
 =================
 
-NOTE: This software is still in a pre-release state. Anything can and will happen!
-With that said, improvement suggestions and PRs are very welcome if you want to try it out.
-
 A self contained (Tornado) REST service for running Illuminas bcl2fastq.
 
 Trying it out
 -------------
-    
-    # install dependencies
-    pip install -r requirements.txt .
-    
+The easiest way to try out `arteria-bcl2fastq` is to run it in the provided Vagrant box.
 
-Try running it:
+    # get the vagrant environment running
+    # Please note that starting this vm requires 4 GB or RAM (since bcl2fastq requires alot of memory to run)
+    vagrant up
+
+    # ssh into it
+    vagrant ssh
+
+    # move into the vagrant working directory
+    cd /vagrant
+
+    # create a virtual environment and activate it
+    virtualenv venv && source venv/bin/activate
+
+    # update pip (unfortunately the installed verison is to old)
+    pip install --upgrade pip    
+
+    # install bcl2fastq (with -e for "editable" to make development easier)
+    pip install -r requirements/dev .
+    
+Now you can try running it:
 
      bcl2fastq-ws --config config/ --port 8888
 
-And then you can find a simple api documentation by going to:
+And then you can find a simple api documentation by opening up an additional terminal by running going to:
 
-    http://localhost:8888/api/1.0
+    curl http://localhost:8888/api | python -m json.tool
 
+To try things out a bit more, you need to setup a path to watch and place some runfolders there, e.g.
 
-Running integration tests in docker container (with a centos base). First you need to change the
- `FROM arteria/frozendata:latest` to `FROM centos:6` as the base image for this container in not 
- yet public (but we hope to make it so in the future).
+    # Create the following folders under the /vagrant directory (or anywhere you like, but then
+    # you need to make the corresponding changes in the `config/app.config`).
+    mkdir ./bcl2fastq_logs ./runfolder_output
 
-    docker build -t bcl2fastq-ws .
-    docker run -v $PWD:/bcl2fastq-ws -p 8888:8888 -t -i bcl2fastq-ws:latest /bin/bash
+    # Clone a directory with test data
+    git clone https://github.com/roryk/tiny-test-data.git
 
-    # Once inside the docker container execute
-    cd /bcl2fastq-ws/ && pip install -r requirements.txt && python2.7 setup.py install && bcl2fastq-ws --config config/ --port 8888
+    # Start the service again
+    bcl2fastq-ws --config config/ --port 8888
 
-Now you should have a image with Illuminas `bcl2fastq` installed as well as the `bcl2fastq-ws`, 
-and it should be reachable on `localhost:8888`
+    # And now you can kick of running bcl2fastq on the small runfolder by:
+    curl -X POST --data '{"additional_args": "--ignore-missing-bcls --ignore-missing-filter --ignore-missing-positions --ignore-missing-controls"}' http://localhost:8888/api/1.0/start/flowcell
+
+    # You can poll its status on the returned link, or you can poll
+    curl http://localhost:8888/api/1.0/status/ 
+
+    
