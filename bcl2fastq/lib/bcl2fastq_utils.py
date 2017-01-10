@@ -303,7 +303,6 @@ class BCL2FastqRunner(object):
         :return: None
         """
         if os.path.isdir(self.config.output):
-            print "Found a directory at output path {}, will remove it.".format(self.config.output)
             log.info("Found a directory at output path {}, will remove it.".format(self.config.output))
             shutil.rmtree(self.config.output)
 
