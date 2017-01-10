@@ -297,6 +297,16 @@ class BCL2FastqRunner(object):
         """
         raise NotImplementedError("Subclasses should implement this!")
 
+    def delete_output(self):
+        """
+        Delete the output directory if it exists
+        :return: None
+        """
+        if os.path.isdir(self.config.output):
+            print "Found a directory at output path {}, will remove it.".format(self.config.output)
+            log.info("Found a directory at output path {}, will remove it.".format(self.config.output))
+            shutil.rmtree(self.config.output)
+
     def symlink_output_to_unaligned(self):
         """
         Create a symlink from `runfolder/Unaligned` to what has been defined as the output directory.

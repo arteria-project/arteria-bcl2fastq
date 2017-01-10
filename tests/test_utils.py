@@ -1,5 +1,5 @@
 
-from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunner
+from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunner, Bcl2FastqConfig
 
 class TestUtils:
 
@@ -57,9 +57,15 @@ class DummyConfig:
     def __getitem__(self, key):
         return TestUtils.DUMMY_CONFIG[key]
 
+class DummyRunnerConfig(Bcl2FastqConfig):
+    def __init__(self, output):
+        self.output = output
+
+
 class FakeRunner(BCL2FastqRunner):
-    def __init__(self, dummy_version):
+    def __init__(self, dummy_version, config):
         self.dummy_version = dummy_version
+        self.config = config
 
     def version(self):
         return str(self.dummy_version)

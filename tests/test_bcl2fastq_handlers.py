@@ -2,8 +2,8 @@ from tornado.testing import *
 
 from tornado.escape import json_encode
 import mock
-from test_utils import TestUtils, DummyConfig
-
+from test_utils import TestUtils, DummyConfig, DummyRunnerConfig
+import shutil
 
 from bcl2fastq.handlers.bcl2fastq_handlers import *
 from bcl2fastq.lib.bcl2fastq_utils import BCL2Fastq2xRunner, BCL2FastqRunner
@@ -32,6 +32,8 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
                             8: "y*,7i,n*,y*",
                             }
 
+    DUMMY_RUNNER_CONF = DummyRunnerConfig(output='/foo/bar')
+
     def get_app(self):
         dummy_config = DummyConfig()
         return Application(routes(config=dummy_config))
@@ -49,8 +51,10 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
         # Use mock to ensure that this will run without
         # creating the runfolder.
         with mock.patch.object(os.path, 'isdir', return_value=True), \
+             mock.patch.object(shutil, 'rmtree', return_value=None), \
              mock.patch.object(Bcl2FastqConfig, 'get_bcl2fastq_version_from_run_parameters', return_value="2.15.2"), \
-             mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner", return_value=FakeRunner("2.15.2")), \
+             mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner",
+                               return_value=FakeRunner("2.15.2", self.DUMMY_RUNNER_CONF)), \
              mock.patch.object(BCL2FastqRunner, 'symlink_output_to_unaligned', return_value=None):
 
             body = {"runfolder_input": "/path/to/runfolder"}
@@ -70,8 +74,10 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
         # Use mock to ensure that this will run without
         # creating the runfolder.
         with mock.patch.object(os.path, 'isdir', return_value=True), \
+             mock.patch.object(shutil, 'rmtree', return_value=None), \
              mock.patch.object(Bcl2FastqConfig, 'get_bcl2fastq_version_from_run_parameters', return_value="2.15.2"), \
-             mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner", return_value=FakeRunner("2.15.2")), \
+             mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner",
+                               return_value=FakeRunner("2.15.2", self.DUMMY_RUNNER_CONF)), \
              mock.patch.object(BCL2FastqRunner, 'symlink_output_to_unaligned', return_value=None):
 
             response = self.fetch(self.API_BASE + "/start/150415_D00457_0091_AC6281ANXX", method="POST", body="")
@@ -89,10 +95,12 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
         # Use mock to ensure that this will run without
         # creating the runfolder.
         with mock.patch.object(os.path, 'isdir', return_value=True), \
+             mock.patch.object(shutil, 'rmtree', return_value=None), \
              mock.patch.object(Bcl2FastqConfig, 'get_bcl2fastq_version_from_run_parameters', return_value="2.15.2"), \
              mock.patch.object(BCL2FastqRunner, 'symlink_output_to_unaligned', return_value=None), \
              mock.patch.object(Bcl2FastqConfig, "write_samplesheet") as ws , \
-                mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner", return_value=FakeRunner("2.15.2")):
+                mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner",
+                                  return_value=FakeRunner("2.15.2", self.DUMMY_RUNNER_CONF)):
 
             body = {"runfolder_input": "/path/to/runfolder", "samplesheet": TestUtils.DUMMY_SAMPLESHEET_STRING}
 
