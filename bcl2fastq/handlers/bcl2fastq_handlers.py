@@ -125,6 +125,9 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
                 raise ArteriaUsageException("A output folder was specified by the request, but the configuration "
                                             "does not allow arbitrary output folder to be specified.")
 
+        if os.path.abspath(output) == os.path.abspath(runfolder_input):
+            raise ArteriaUsageException("The specified output path is the same as the input path. This is not allowed!")
+
         if "samplesheet" in request_data:
             samplesheet = request_data["samplesheet"]
 
