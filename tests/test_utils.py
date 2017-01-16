@@ -3,24 +3,6 @@ from bcl2fastq.lib.bcl2fastq_utils import BCL2FastqRunner, Bcl2FastqConfig
 
 class TestUtils:
 
-    DUMMY_CONFIG = { "runfolder_path": "/data/biotank3/runfolders",
-                     "default_output_path": "test",
-                     "bcl2fastq":
-                         {"versions":
-                              {"2.15.2":
-                                   {"class_creation_function": "_get_bcl2fastq2x_runner",
-                                    "binary": "/path/to/bcl2fastq"},
-                               "1.8.4":
-                                   {"class_creation_function": "_get_bcl2fastq1x_runner",
-                                    "binary": "/path/to/bcl2fastq"}}},
-                     "machine_type":
-                         {"MiSeq": {"bcl2fastq_version": "1.8.4"},
-                          "HiSeq X": {"bcl2fastq_version": "2.15.2"},
-                          "HiSeq 2500": {"bcl2fastq_version": "1.8.4"},
-                          "HiSeq 4000": {"bcl2fastq_version": "1.8.4"},
-                          "HiSeq 2000": {"bcl2fastq_version": "1.8.4"},
-                          "NextSeq 500": {"bcl2fastq_version": "1.8.4"}},
-                     "bcl2fastq_logs_path": "/tmp/"}
 
     DUMMY_SAMPLESHEET_STRING =  """[Header],,,,,,,,,,,
 IEMFileVersion,4,,,,,,,,,,
@@ -54,8 +36,28 @@ Lane,Sample_ID,Sample_Name,Sample_Plate,Sample_Well,I7_Index_ID,index,I5_Index_I
 
 
 class DummyConfig:
+    DUMMY_CONFIG = { "runfolder_path": "/data/biotank3/runfolders",
+                     "default_output_path": "test",
+                     "bcl2fastq":
+                         {"versions":
+                              {"2.15.2":
+                                   {"class_creation_function": "_get_bcl2fastq2x_runner",
+                                    "binary": "/path/to/bcl2fastq"},
+                               "1.8.4":
+                                   {"class_creation_function": "_get_bcl2fastq1x_runner",
+                                    "binary": "/path/to/bcl2fastq"}}},
+                     "machine_type":
+                         {"MiSeq": {"bcl2fastq_version": "1.8.4"},
+                          "HiSeq X": {"bcl2fastq_version": "2.15.2"},
+                          "HiSeq 2500": {"bcl2fastq_version": "1.8.4"},
+                          "HiSeq 4000": {"bcl2fastq_version": "1.8.4"},
+                          "HiSeq 2000": {"bcl2fastq_version": "1.8.4"},
+                          "NextSeq 500": {"bcl2fastq_version": "1.8.4"}},
+                     "bcl2fastq_logs_path": "/tmp/",
+                     "allow_arbitrary_output_folder": False}
+
     def __getitem__(self, key):
-        return TestUtils.DUMMY_CONFIG[key]
+        return self.DUMMY_CONFIG[key]
 
 class DummyRunnerConfig(Bcl2FastqConfig):
     def __init__(self, output):

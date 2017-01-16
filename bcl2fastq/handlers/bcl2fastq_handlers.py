@@ -119,7 +119,11 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
             bcl2fastq_version = request_data["bcl2fastq_version"]
 
         if "output" in request_data:
-            output = request_data["output"]
+            if self.config['allow_arbitrary_output_folder']:
+                output = request_data["output"]
+            else:
+                raise ArteriaUsageException("A output folder was specified by the request, but the configuration "
+                                            "does not allow arbitrary output folder to be specified.")
 
         if "samplesheet" in request_data:
             samplesheet = request_data["samplesheet"]

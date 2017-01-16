@@ -15,10 +15,11 @@ class TestBcl2FastqConfig(unittest.TestCase):
     test_dir = os.path.dirname(os.path.realpath(__file__))
     samplesheet_file = test_dir + "/sampledata/new_samplesheet_example.csv"
     samplesheet_with_no_tag = test_dir + "/sampledata/no_tag_samplesheet_example.csv"
+    dummy_config = DummyConfig()
 
     def test_get_bcl2fastq_version_from_run_parameters(self):
         runfolder = TestBcl2FastqConfig.test_dir + "/sampledata/HiSeq-samples/2014-02_13_average_run"
-        version = Bcl2FastqConfig.get_bcl2fastq_version_from_run_parameters(runfolder, TestUtils.DUMMY_CONFIG)
+        version = Bcl2FastqConfig.get_bcl2fastq_version_from_run_parameters(runfolder, self.dummy_config)
         self.assertEqual(version, "1.8.4")
 
     def test_is_single_read_true(self):
@@ -117,6 +118,8 @@ class TestBcl2FastqConfig(unittest.TestCase):
 
 class TestBCL2FastqRunnerFactory(unittest.TestCase):
 
+    dummy_config = DummyConfig()
+
     def test_create_bcl2fastq1x_runner(self):
         config = Bcl2FastqConfig(
             general_config = DUMMY_CONFIG,
@@ -124,7 +127,7 @@ class TestBCL2FastqRunnerFactory(unittest.TestCase):
             runfolder_input = "test/runfolder",
             output = "test/output")
 
-        factory = BCL2FastqRunnerFactory(TestUtils.DUMMY_CONFIG)
+        factory = BCL2FastqRunnerFactory(self.dummy_config)
         runner = factory.create_bcl2fastq_runner(config)
         self.assertIsInstance(runner, BCL2Fastq1xRunner)
 
@@ -135,7 +138,7 @@ class TestBCL2FastqRunnerFactory(unittest.TestCase):
             runfolder_input = "test/runfolder",
             output = "test/output")
 
-        factory = BCL2FastqRunnerFactory(TestUtils.DUMMY_CONFIG)
+        factory = BCL2FastqRunnerFactory(self.dummy_config)
         runner = factory.create_bcl2fastq_runner(config)
         self.assertIsInstance(runner, BCL2Fastq2xRunner, msg="runner is: " + str(runner))
 
@@ -146,7 +149,7 @@ class TestBCL2FastqRunnerFactory(unittest.TestCase):
             runfolder_input = "test/runfolder",
             output = "test/output")
 
-        factory = BCL2FastqRunnerFactory(TestUtils.DUMMY_CONFIG)
+        factory = BCL2FastqRunnerFactory(self.dummy_config)
         with self.assertRaises(LookupError):
             factory.create_bcl2fastq_runner(config)
 
