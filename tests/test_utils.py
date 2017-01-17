@@ -54,14 +54,15 @@ class DummyConfig:
                           "HiSeq 2000": {"bcl2fastq_version": "1.8.4"},
                           "NextSeq 500": {"bcl2fastq_version": "1.8.4"}},
                      "bcl2fastq_logs_path": "/tmp/",
-                     "allow_arbitrary_output_folder": False}
+                     "allowed_output_folders": ['/foo/bar']}
 
     def __getitem__(self, key):
         return self.DUMMY_CONFIG[key]
 
 class DummyRunnerConfig(Bcl2FastqConfig):
-    def __init__(self, output):
+    def __init__(self, output, general_config):
         self.output = output
+        self.general_config = general_config
 
 
 class FakeRunner(BCL2FastqRunner):

@@ -48,6 +48,8 @@ class Bcl2FastqConfig:
         :param nbr_of_cores: number of cores to run bcl2fastq with
         """
 
+        self.general_config = general_config
+
         self.runfolder_input = runfolder_input
         self.base_calls_input = runfolder_input + "/Data/Intensities/BaseCalls"
 
@@ -297,12 +299,29 @@ class BCL2FastqRunner(object):
         """
         raise NotImplementedError("Subclasses should implement this!")
 
+    def validate_output(self):
+
+        def _parent_dir(d):
+            return os.path.abspath(os.path.join(d, os.path.pardir))
+
+        abs_path_of_allowed_dirs = map(os.path.abspath, self.config.general_config['allowed_output_folders'])
+        is_located_in_parent_dir = _parent_dir(self.config.output) in abs_path_of_allowed_dirs
+
+        if is_located_in_parent_dir:
+            True
+        else:
+            error_string = "Invalid output directory {} was specified." \
+                           " Allowed dirs were: {}".format(self.config.output,
+                                                           self.config.general_config['allowed_output_folders'])
+            log.error(error_string)
+            raise ArteriaUsageException(error_string)
+
     def delete_output(self):
         """
-        Delete the output directory if it exists
+        Delete the output directory if it exists and  the output path is valid
         :return: None
         """
-        if os.path.isdir(self.config.output):
+        if self.validate_output():
             log.info("Found a directory at output path {}, will remove it.".format(self.config.output))
             shutil.rmtree(self.config.output)
 

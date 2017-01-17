@@ -32,9 +32,8 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
                             8: "y*,7i,n*,y*",
                             }
 
-    DUMMY_RUNNER_CONF = DummyRunnerConfig(output='/foo/bar')
-
     dummy_config = DummyConfig()
+    DUMMY_RUNNER_CONF = DummyRunnerConfig(output='/foo/bar/runfolder', general_config = dummy_config)
 
     def get_app(self):
         return Application(routes(config=self.dummy_config))
@@ -94,22 +93,32 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
 
     def test_start_with_disallowed_output_specified(self):
 
-        self.dummy_config.DUMMY_CONFIG['allow_arbitrary_output_folder'] = False
+        # TODO Please note that this test is not very good, since the
+        #      what we ideally want to test is the output specifed by the request,
+        #      and that that gets rejected, however since the create_bcl2fastq_runner command
+        #      is mocked away here and that is what returns the invalid output the tests is
+        #      a bit misleading. In the future we probably want to refactor this.
+        #      / JD 20170117
+        runner_conf_with_invalid_output = DummyRunnerConfig(output='/not/foo/bar/runfolder',
+                                                            general_config = self.dummy_config)
+        with mock.patch.object(os.path, 'isdir', return_value=True), \
+             mock.patch.object(shutil, 'rmtree', return_value=None), \
+             mock.patch.object(Bcl2FastqConfig, 'get_bcl2fastq_version_from_run_parameters', return_value="2.15.2"), \
+             mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner",
+                               return_value=FakeRunner("2.15.2", runner_conf_with_invalid_output)), \
+             mock.patch.object(BCL2FastqRunner, 'symlink_output_to_unaligned', return_value=None):
 
-        with mock.patch.object(os.path, 'isdir', return_value=True):
-                body = {'output': '/foo/bar'}
+                # This output dir is not allowed by the config
+                body = {'output': '/not/foo/bar'}
                 response = self.fetch(self.API_BASE + "/start/150415_D00457_0091_AC6281ANXX",
                                       method="POST",
                                       body=json_encode(body))
+
                 self.assertEqual(response.code, 500)
-                self.assertEqual(response.reason, "A output folder was specified by the request, "
-                                                  "but the configuration does "
-                                                  "not allow arbitrary output folder to be specified.")
+                self.assertEqual(response.reason, "Invalid output directory /not/foo/bar/runfolder was specified."
+                                                  " Allowed dirs were: ['/foo/bar']")
 
     def test_start_with_allowed_output_specified(self):
-
-        self.dummy_config.DUMMY_CONFIG['allow_arbitrary_output_folder'] = True
-
         with mock.patch.object(os.path, 'isdir', return_value=True), \
             mock.patch.object(shutil, 'rmtree', return_value=None), \
             mock.patch.object(Bcl2FastqConfig, 'get_bcl2fastq_version_from_run_parameters', return_value="2.15.2"), \
