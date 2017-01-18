@@ -100,9 +100,9 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
         #      a bit misleading. In the future we probably want to refactor this.
         #      / JD 20170117
         runner_conf_with_invalid_output = DummyRunnerConfig(output='/not/foo/bar/runfolder',
-                                                            general_config = self.dummy_config)
+                                                            general_config=self.dummy_config)
         with mock.patch.object(os.path, 'isdir', return_value=True), \
-             mock.patch.object(shutil, 'rmtree', return_value=None), \
+             mock.patch.object(shutil, 'rmtree', return_value=None) as rmmock, \
              mock.patch.object(Bcl2FastqConfig, 'get_bcl2fastq_version_from_run_parameters', return_value="2.15.2"), \
              mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner",
                                return_value=FakeRunner("2.15.2", runner_conf_with_invalid_output)), \
@@ -117,10 +117,11 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
                 self.assertEqual(response.code, 500)
                 self.assertEqual(response.reason, "Invalid output directory /not/foo/bar/runfolder was specified."
                                                   " Allowed dirs were: ['/foo/bar']")
+                rmmock.assert_not_called()
 
     def test_start_with_allowed_output_specified(self):
         with mock.patch.object(os.path, 'isdir', return_value=True), \
-            mock.patch.object(shutil, 'rmtree', return_value=None), \
+            mock.patch.object(shutil, 'rmtree', return_value=None) as rmmock, \
             mock.patch.object(Bcl2FastqConfig, 'get_bcl2fastq_version_from_run_parameters', return_value="2.15.2"), \
             mock.patch.object(BCL2FastqRunnerFactory, "create_bcl2fastq_runner",
                               return_value=FakeRunner("2.15.2", self.DUMMY_RUNNER_CONF)), \
@@ -133,6 +134,7 @@ class TestBcl2FastqHandlers(AsyncHTTPTestCase):
                 # Just increment it here so it doesn't break the other tests
                 self.start_api_call_nbr()
                 self.assertEqual(response.code, 202)
+                rmmock.assert_called_with('/foo/bar/runfolder')
 
     def test_start_providing_samplesheet(self):
         # Use mock to ensure that this will run without

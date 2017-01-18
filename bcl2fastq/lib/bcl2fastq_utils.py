@@ -307,9 +307,7 @@ class BCL2FastqRunner(object):
         abs_path_of_allowed_dirs = map(os.path.abspath, self.config.general_config['allowed_output_folders'])
         is_located_in_parent_dir = _parent_dir(self.config.output) in abs_path_of_allowed_dirs
 
-        if is_located_in_parent_dir:
-            True
-        else:
+        if not is_located_in_parent_dir:
             error_string = "Invalid output directory {} was specified." \
                            " Allowed dirs were: {}".format(self.config.output,
                                                            self.config.general_config['allowed_output_folders'])
@@ -321,9 +319,9 @@ class BCL2FastqRunner(object):
         Delete the output directory if it exists and  the output path is valid
         :return: None
         """
-        if self.validate_output():
-            log.info("Found a directory at output path {}, will remove it.".format(self.config.output))
-            shutil.rmtree(self.config.output)
+        self.validate_output()
+        log.info("Found a directory at output path {}, will remove it.".format(self.config.output))
+        shutil.rmtree(self.config.output)
 
     def symlink_output_to_unaligned(self):
         """
