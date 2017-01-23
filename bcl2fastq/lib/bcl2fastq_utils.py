@@ -1,5 +1,6 @@
 import subprocess
 import os
+import errno
 from itertools import groupby
 import logging
 import shutil
@@ -321,7 +322,17 @@ class BCL2FastqRunner(object):
         """
         self.validate_output()
         log.info("Found a directory at output path {}, will remove it.".format(self.config.output))
-        shutil.rmtree(self.config.output)
+        try:
+            shutil.rmtree(self.config.output)
+        except OSError as e:
+            # Ignore if the error is of type "No such file or directory"
+            if e.errno == errno.ENOENT:
+                log.debug("No such output directory, with path: {} will not remove it.".format(self.config.output))
+                pass
+            else:
+                log.error("Got error with error number {} when trying to remove dir: {}".format(e.errno,
+                                                                                                self.config.output))
+                raise e
 
     def symlink_output_to_unaligned(self):
         """
