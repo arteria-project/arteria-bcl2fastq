@@ -30,6 +30,7 @@ class Bcl2FastqConfig:
                  barcode_mismatches=None,
                  tiles=None,
                  use_base_mask=None,
+                 create_indexes=False,
                  additional_args=None,
                  nbr_of_cores=None):
         """
@@ -45,6 +46,7 @@ class Bcl2FastqConfig:
         :param barcode_mismatches: how many mismatches to allow in tag.
         :param tiles: tiles to include when running bcl2fastq
         :param use_base_mask: base mask to use
+        :param create_indexes: Create fastq files for indexes
         :param additional_args: this can be used to pass any other arguments to bcl2fastq
         :param nbr_of_cores: number of cores to run bcl2fastq with
         """
@@ -86,6 +88,7 @@ class Bcl2FastqConfig:
         # commandline passed. E.g. "--use-bases-mask 1:y*,6i,6i, y* --use-bases-mask y*,6i,6i, y* "
         self.use_base_mask = use_base_mask
         self.additional_args = additional_args
+        self.create_indexes = create_indexes
 
         # Nbr of cores to use will default to the number of cpus on the system.
         if nbr_of_cores:
@@ -397,6 +400,9 @@ class BCL2Fastq2xRunner(BCL2FastqRunner):
 
         if self.config.tiles:
             commandline_collection.append("--tiles " + self.config.tiles)
+
+        if self.config.create_indexes:
+            commandline_collection.append("--create-fastq-for-index-reads")
 
         if self.config.use_base_mask:
             # Note that for the base mask the "--use-bases-mask" must be included in the

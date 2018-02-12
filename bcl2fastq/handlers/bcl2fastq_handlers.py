@@ -107,6 +107,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         barcode_mismatches = ""
         tiles = ""
         use_base_mask = ""
+        create_indexes = False
         additional_args = ""
 
         runfolder_base_path = self.config["runfolder_path"]
@@ -133,6 +134,10 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
         if "use_base_mask" in request_data:
             use_base_mask = request_data["use_base_mask"]
 
+        if "create_indexes" in request_data:
+            if request_data["create_indexes"] == "True":
+                create_indexes = True
+
         if "additional_args" in request_data:
             additional_args = request_data["additional_args"]
 
@@ -145,6 +150,7 @@ class StartHandler(BaseBcl2FastqHandler, Bcl2FastqServiceMixin):
             barcode_mismatches,
             tiles,
             use_base_mask,
+            create_indexes,
             additional_args)
 
         return config
