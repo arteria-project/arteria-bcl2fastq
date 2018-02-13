@@ -6,7 +6,8 @@ import logging
 import shutil
 import time
 
-from illuminate.metadata import InteropMetadata
+
+import xmltodict
 
 
 from arteria.exceptions import ArteriaUsageException
@@ -30,6 +31,7 @@ class Bcl2FastqConfig:
                  barcode_mismatches=None,
                  tiles=None,
                  use_base_mask=None,
+                 create_indexes=False,
                  additional_args=None,
                  nbr_of_cores=None):
         """
@@ -45,6 +47,7 @@ class Bcl2FastqConfig:
         :param barcode_mismatches: how many mismatches to allow in tag.
         :param tiles: tiles to include when running bcl2fastq
         :param use_base_mask: base mask to use
+        :param create_indexes: Create fastq files for indexes
         :param additional_args: this can be used to pass any other arguments to bcl2fastq
         :param nbr_of_cores: number of cores to run bcl2fastq with
         """
@@ -86,6 +89,7 @@ class Bcl2FastqConfig:
         # commandline passed. E.g. "--use-bases-mask 1:y*,6i,6i, y* --use-bases-mask y*,6i,6i, y* "
         self.use_base_mask = use_base_mask
         self.additional_args = additional_args
+        self.create_indexes = create_indexes
 
         # Nbr of cores to use will default to the number of cpus on the system.
         if nbr_of_cores:
@@ -107,6 +111,12 @@ class Bcl2FastqConfig:
             f.write(samplesheet_string)
 
     @staticmethod
+    def runinfo_as_dict(runfolder):
+        runinfo_path = os.path.join(runfolder, "RunInfo.xml")
+        with open(runinfo_path) as f:
+            return xmltodict.parse(f.read())
+
+    @staticmethod
     def get_bcl2fastq_version_from_run_parameters(runfolder, config):
         """
         Guess which bcl2fastq version to use based on the machine type
@@ -117,13 +127,20 @@ class Bcl2FastqConfig:
         :return the version of bcl2fastq to use.
         """
 
-        meta_data = InteropMetadata(runfolder)
-        model = meta_data.model
+        run_info = Bcl2FastqConfig.runinfo_as_dict(runfolder)
+        instrument_name = run_info["RunInfo"]["Run"]["Instrument"]
 
-        current_config = config
-        version = current_config["machine_type"][model]["bcl2fastq_version"]
+        machine_type_mappings = {"M": "MiSeq",
+                                 "D": "HiSeq 2500",
+                                 "SN": "HiSeq 2000",
+                                 "ST": "HiSeq X",
+                                 "A": "NovaSeq",
+                                 "NS": "NextSeq 500",
+                                 "K": "HiSeq 4000"}
 
-        return version
+        for key, value in machine_type_mappings.items():
+            if instrument_name.startswith(key):
+                return config["machine_type"][value]["bcl2fastq_version"]
 
     @staticmethod
     def get_length_of_indexes(runfolder):
@@ -133,16 +150,23 @@ class Bcl2FastqConfig:
         :return: a dict with the read number as key and the length of each index as value e.g.:
                  {2: 7, 3: 8}
         """
-        meta_data = InteropMetadata(runfolder)
-        index_read_info = filter(lambda x: x["is_index"], meta_data.read_config)
-        indexes_and_lengths = map(lambda x: (x["read_num"], x["cycles"]), index_read_info)
-        return dict(indexes_and_lengths)
+
+        run_info = Bcl2FastqConfig.runinfo_as_dict(runfolder)
+        reads = run_info["RunInfo"]["Run"]["Reads"]["Read"]
+
+        index_lengths = {}
+        for read in reads:
+            if read['@IsIndexedRead'] == 'Y':
+                index_lengths[int(read['@Number'])] = int(read['@NumCycles'])
+        return index_lengths
 
     @staticmethod
     def is_single_read(runfolder):
-        meta_data = InteropMetadata(runfolder)
-        number_of_reads = filter(lambda x: not x["is_index"], meta_data.read_config)
-        return len(number_of_reads) < 2
+        run_info = Bcl2FastqConfig.runinfo_as_dict(runfolder)
+        reads = run_info["RunInfo"]["Run"]["Reads"]["Read"]
+
+        nbr_of_reads = len(list(filter(lambda x: not x["@IsIndexedRead"] == 'Y', reads)))
+        return nbr_of_reads < 2
 
     @staticmethod
     def get_bases_mask_per_lane_from_samplesheet(samplesheet, index_lengths, is_single_read):
@@ -397,6 +421,9 @@ class BCL2Fastq2xRunner(BCL2FastqRunner):
 
         if self.config.tiles:
             commandline_collection.append("--tiles " + self.config.tiles)
+
+        if self.config.create_indexes:
+            commandline_collection.append("--create-fastq-for-index-reads")
 
         if self.config.use_base_mask:
             # Note that for the base mask the "--use-bases-mask" must be included in the
