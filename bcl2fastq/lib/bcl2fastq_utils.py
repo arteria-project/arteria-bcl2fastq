@@ -137,7 +137,7 @@ class Bcl2FastqConfig:
                                  "A": "NovaSeq",
                                  "NS": "NextSeq 500",
                                  "K": "HiSeq 4000",
-                                 "FFSP": "ISeq 100"}
+                                 "FS": "ISeq 100"}
 
         for key, value in machine_type_mappings.items():
             if instrument_name.startswith(key):
